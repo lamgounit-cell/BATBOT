@@ -1,0 +1,360 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>BATBOT Dashboard</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+:root{--bg:#050505;--card:#0d0d0d;--border:#1a1a1a;--text:#e0e0e0;--muted:#666;--accent:#fff}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:.875rem;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:
+  linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;z-index:0}
+.sidebar,.main,.guild-bar,.card,.stat-card,.login-box,.toast{position:relative;z-index:1}
+.sidebar{width:240px;min-height:100vh;background:var(--card);border-right:1px solid var(--border);position:fixed;top:0;left:0}
+.sidebar-header{padding:24px 20px 20px;border-bottom:1px solid var(--border);text-align:center}
+.sidebar-avatar{width:64px;height:64px;border-radius:50%;border:2px solid #333;margin-bottom:10px;object-fit:cover}
+.sidebar-title{font-weight:700;font-size:1rem;letter-spacing:.5px;color:#fff}
+.sidebar-sub{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.nav-section{padding:16px 12px 8px;font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer;border-radius:8px;margin:2px 12px;transition:all .2s;color:var(--muted);font-size:.8rem;font-weight:500}
+.nav-item:hover{background:rgba(255,255,255,.04);color:var(--text)}
+.nav-item.active{background:rgba(255,255,255,.08);color:#fff}
+.nav-item i{font-size:1.1rem;width:20px;text-align:center}
+.main{margin-left:240px;padding:24px 32px}
+.guild-bar{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 20px;margin-bottom:24px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:16px;backdrop-filter:blur(4px)}
+.card-body{padding:20px}
+.card h6{font-size:.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:12px;font-weight:600}
+.card h6 i{margin-right:8px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;margin-bottom:16px}
+.stat-card .value{font-size:1.6rem;font-weight:800;margin:4px 0;color:#fff}
+.stat-card .label{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.page{display:none}.page.active{display:block}
+.table{color:var(--text);font-size:.8rem;margin:0}.table thead{color:var(--muted);border-bottom-color:var(--border);font-size:.7rem;text-transform:uppercase;letter-spacing:.5px}
+.table td,.table th{border-color:var(--border)!important;vertical-align:middle;padding:10px 12px}
+.form-control,.form-select{background:#000;border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:.8rem}
+.form-control:focus,.form-select:focus{border-color:#fff;box-shadow:0 0 0 1px rgba(255,255,255,.15);background:#000;color:var(--text)}
+.form-check-input{background:#000;border:1px solid #333;width:2.5em;height:1.25em;cursor:pointer}
+.form-check-input:checked{background:#fff;border-color:#fff}
+.form-check-input:focus{box-shadow:none;border-color:#555}
+.login-overlay{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9999;display:flex;align-items:center;justify-content:center}
+.login-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:40px;width:100%;max-width:360px}
+.login-avatar{width:72px;height:72px;border-radius:50%;border:2px solid #333;margin:0 auto 16px;display:block;object-fit:cover}
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:999}
+.btn{font-size:.8rem;font-weight:600;padding:8px 20px;border-radius:8px;transition:all .2s}
+.btn-primary{background:#fff;border:none;color:#000}.btn-primary:hover{background:#e0e0e0;color:#000}
+.btn-outline-danger{color:#ff4444;border-color:#ff4444;background:transparent}.btn-outline-danger:hover{background:#ff4444;color:#fff}
+.btn-sm{padding:4px 12px;font-size:.75rem}
+code{color:var(--muted);font-size:.75rem;background:rgba(255,255,255,.04);padding:2px 6px;border-radius:4px}
+hr{border-color:var(--border);margin:12px 0;opacity:.5}
+.text-muted{color:var(--muted)!important}
+.badge{font-weight:600;font-size:.7rem;padding:3px 10px;border-radius:20px}
+.bg-primary{background:#fff!important;color:#000!important}
+.bg-success{background:#1a1a1a!important;color:#fff!important;border:1px solid #333}
+.bg-secondary{background:#111!important;color:var(--muted)!important;border:1px solid #222}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:#222;border-radius:3px}
+::selection{background:rgba(255,255,255,.15)}
+</style>
+</head>
+<body>
+
+<div id="loginOverlay" class="login-overlay">
+  <div class="login-box text-center">
+    <img id="loginAvatar" class="login-avatar" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="">
+    <h5 class="fw-bold mb-1" id="loginName">BATBOT</h5>
+    <small class="text-muted d-block mb-4">Dashboard</small>
+    <div class="mb-3"><input type="password" id="loginPass" class="form-control text-center" placeholder="Password"></div>
+    <button class="btn btn-primary w-100" onclick="login()">Sign In</button>
+    <div id="loginError" class="text-danger mt-3 small" style="display:none"></div>
+  </div>
+</div>
+
+<div class="sidebar">
+  <div class="sidebar-header">
+    <img id="sidebarAvatar" class="sidebar-avatar" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="">
+    <div class="sidebar-title" id="sidebarName">BATBOT</div>
+    <div class="sidebar-sub" id="sidebarTag">Loading...</div>
+  </div>
+  <div class="nav-section">Navigation</div>
+  <div id="navContainer">
+    <div class="nav-item active" data-page="overview"><i class="bi bi-grid-fill"></i>Overview</div>
+    <div class="nav-item" data-page="moderation"><i class="bi bi-shield-fill"></i>Moderation</div>
+    <div class="nav-item" data-page="levels"><i class="bi bi-trophy-fill"></i>Levels</div>
+    <div class="nav-item" data-page="economy"><i class="bi bi-coin"></i>Economy</div>
+    <div class="nav-item" data-page="tickets"><i class="bi bi-ticket-fill"></i>Tickets</div>
+    <div class="nav-item" data-page="settings"><i class="bi bi-gear-fill"></i>Settings</div>
+    <div class="nav-item" data-page="logs"><i class="bi bi-journal-text"></i>Logs</div>
+  </div>
+  <div class="position-absolute bottom-0 w-100 p-3 border-top text-center" style="border-color:var(--border)!important">
+    <small class="text-muted" id="footerTime"></small>
+  </div>
+</div>
+
+<div class="main">
+  <div class="guild-bar">
+    <div class="row align-items-center g-2">
+      <div class="col-md">
+        <small class="text-muted me-2 fw-semibold uppercase" style="font-size:.65rem;letter-spacing:1px">Server</small>
+        <select id="guildSelect" class="form-select d-inline-block" style="width:auto;min-width:280px" onchange="selectGuild()">
+          <option value="">Loading...</option>
+        </select>
+      </div>
+      <div class="col-md-auto d-flex align-items-center gap-3">
+        <span><span class="badge" id="statusBadge" style="background:#1a1a1a;border:1px solid #333">● Online</span></span>
+        <small class="text-muted" id="pingDisplay">-</small>
+      </div>
+    </div>
+  </div>
+  <div id="page-overview" class="page active"></div>
+  <div id="page-moderation" class="page"></div>
+  <div id="page-levels" class="page"></div>
+  <div id="page-economy" class="page"></div>
+  <div id="page-tickets" class="page"></div>
+  <div id="page-settings" class="page"></div>
+  <div id="page-logs" class="page"></div>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+const API = '/api';
+let TOKEN = localStorage.getItem('dt') || '';
+let guilds = [], cache = {}, currentGuild = null, currentPage = 'overview';
+let botAvatar = '';
+
+async function api(path, opts = {}) {
+  opts.headers = {...(opts.headers||{}), 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json'};
+  const r = await fetch(API + path, opts);
+  if (r.status === 401) { localStorage.removeItem('dt'); showLogin(); return null; }
+  if (r.status === 204) return {};
+  return r.json();
+}
+
+function showLogin() { document.getElementById('loginOverlay').style.display = 'flex'; }
+function hideLogin() { document.getElementById('loginOverlay').style.display = 'none'; }
+
+async function login() {
+  const pass = document.getElementById('loginPass').value;
+  const r = await fetch(API + '/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({password:pass}) });
+  if (r.ok) { const d = await r.json(); TOKEN = d.token; localStorage.setItem('dt', d.token); hideLogin(); init(); }
+  else { const e = document.getElementById('loginError'); e.textContent='Wrong password'; e.style.display='block'; }
+}
+
+async function init() {
+  const bot = await api('/bot');
+  if (bot) { botAvatar = bot.avatar; document.getElementById('sidebarAvatar').src = bot.avatar; document.getElementById('sidebarName').textContent = bot.username; document.getElementById('sidebarTag').textContent = bot.tag; document.getElementById('loginAvatar').src = bot.avatar; document.getElementById('loginName').textContent = bot.username; }
+  guilds = (await api('/guilds')) || [];
+  const sel = document.getElementById('guildSelect');
+  if (guilds.length === 0) { sel.innerHTML = '<option value="">No servers found</option>'; return; }
+  sel.innerHTML = guilds.map(g => `<option value="${g.id}">${g.name} (${g.memberCount})</option>`).join('');
+  sel.value = guilds[0].id;
+  selectGuild();
+  tick(); setInterval(tick, 15000);
+}
+
+async function tick() {
+  const s = await api('/stats');
+  if (s) { document.getElementById('pingDisplay').textContent = `${s.ping}ms ping`; document.getElementById('footerTime').textContent = new Date().toLocaleString(); }
+}
+
+document.getElementById('navContainer').addEventListener('click', e => {
+  const item = e.target.closest('.nav-item');
+  if (!item) return;
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  item.classList.add('active');
+  currentPage = item.dataset.page;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + currentPage).classList.add('active');
+  if (cache[currentGuild]) renderPage(currentPage, cache[currentGuild]);
+  if (currentPage === 'logs' && currentGuild) { clearInterval(logsInterval); refreshLogs(); logsInterval = setInterval(refreshLogs, 5000); }
+  else if (logsInterval) { clearInterval(logsInterval); logsInterval = null; }
+});
+
+async function selectGuild() {
+  const id = document.getElementById('guildSelect').value;
+  if (!id) return;
+  currentGuild = id;
+  document.getElementById('page-overview').innerHTML = '<div class="text-center py-5 text-muted"><div class="spinner-border mb-3" role="status"></div><br>Loading...</div>';
+  const data = await api(`/guild/${id}`);
+  if (!data) return;
+  cache[id] = data;
+  renderPage('overview', data);
+  renderPage('moderation', data);
+  renderPage('levels', data);
+  renderPage('economy', data);
+  renderPage('tickets', data);
+  renderPage('settings', data);
+  if (currentPage !== 'overview') {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + currentPage).classList.add('active');
+  }
+}
+
+function renderPage(name, data) {
+  const fns = { overview: renderOverview, moderation: renderModeration, levels: renderLevels, economy: renderEconomy, tickets: renderTickets, settings: renderSettings, logs: renderLogs };
+  if (fns[name]) document.getElementById('page-' + name).innerHTML = fns[name](data);
+}
+
+function renderOverview(d) {
+  const g = d.guild, c = d.config || {};
+  return `
+  <div class="row">
+    <div class="col-md-3"><div class="stat-card"><div class="value">${guilds.length}</div><div class="label">Servers</div></div></div>
+    <div class="col-md-3"><div class="stat-card"><div class="value">${g.memberCount}</div><div class="label">Members</div></div></div>
+    <div class="col-md-3"><div class="stat-card"><div class="value">31</div><div class="label">Commands</div></div></div>
+    <div class="col-md-3"><div class="stat-card"><div class="value" id="pingVal">-</div><div class="label">Ping</div></div></div>
+  </div>
+  <div class="card"><div class="card-body">
+    <h6><i class="bi bi-info-circle"></i> ${g.name}</h6><hr>
+    <div class="row g-3">
+      <div class="col-md-4"><strong class="text-muted d-block small mb-1">Server ID</strong><span>${g.id}</span></div>
+      <div class="col-md-4"><strong class="text-muted d-block small mb-1">Members</strong><span>${g.memberCount}</span></div>
+      <div class="col-md-4"><strong class="text-muted d-block small mb-1">Owner</strong><span>${g.ownerName || g.ownerId}</span></div>
+    </div>
+  </div></div>
+  <div class="card"><div class="card-body">
+    <h6><i class="bi bi-toggle-on"></i> Feature Status</h6><hr>
+    <div class="row g-2">
+      ${[['Log Channel',c.logs_channel?'Set':'Not set'],['Welcome',c.welcome_enabled?'ON':'OFF'],['Leave',c.leave_enabled?'ON':'OFF'],['AutoMod',c.auto_mod_enabled?'ON':'OFF'],['Leveling',c.leveling_enabled?'ON':'OFF'],['Verification',c.verification_enabled?'ON':'OFF'],['Tickets',c.ticket_enabled?'ON':'OFF']].map(f => `<div class="col-md-3 mb-2"><span class="text-muted small">${f[0]}</span><br><strong>${f[1]}</strong></div>`).join('')}
+    </div>
+  </div></div>`;
+}
+
+function renderModeration(d) {
+  const ws = d.warnings || [];
+  return `<div class="card"><div class="card-body">
+    <h6><i class="bi bi-shield-fill"></i> Warnings (${ws.length})</h6><hr>
+    ${ws.length === 0 ? '<p class="text-muted m-0">No warnings recorded.</p>' : `
+    <div class="table-responsive"><table class="table"><thead><tr><th>#</th><th>User</th><th>Reason</th><th>Moderator</th><th>Date</th><th></th></tr></thead><tbody>
+    ${ws.map(w => `<tr><td>${w.id}</td><td>${w.userName||w.user_id}</td><td>${(w.reason||'').slice(0,50)}</td><td>${w.modName||w.moderator_id}</td><td>${(w.timestamp||'').slice(0,10)}</td><td><button class="btn btn-sm btn-outline-danger" onclick="clearWarn('${w.user_id}')">Clear</button></td></tr>`).join('')}
+    </tbody></table></div>`}
+  </div></div>`;
+}
+
+async function clearWarn(uid) {
+  if (!confirm('Clear all warnings for this user?')) return;
+  await api(`/guild/${currentGuild}/warnings/${uid}`, {method:'DELETE'});
+  selectGuild(); toast('Cleared');
+}
+
+function renderLevels(d) {
+  const lv = d.levels || [];
+  return `<div class="card"><div class="card-body">
+    <h6><i class="bi bi-trophy-fill"></i> Leaderboard</h6><hr>
+    ${lv.length === 0 ? '<p class="text-muted m-0">No level data yet.</p>' : `
+    <div class="table-responsive"><table class="table"><thead><tr><th>#</th><th>User</th><th>Level</th><th>XP</th></tr></thead><tbody>
+    ${lv.map((u,i) => `<tr><td class="fw-bold text-muted">#${i+1}</td><td>${u.userName||u.user_id}</td><td><span class="badge" style="background:#fff;color:#000">${u.level}</span></td><td>${u.xp} XP</td></tr>`).join('')}
+    </tbody></table></div>`}
+  </div></div>`;
+}
+
+function renderEconomy(d) {
+  const ec = d.economy || [];
+  return `<div class="card"><div class="card-body">
+    <h6><i class="bi bi-coin"></i> Richest Members</h6><hr>
+    ${ec.length === 0 ? '<p class="text-muted m-0">No economy data yet.</p>' : `
+    <div class="table-responsive"><table class="table"><thead><tr><th>#</th><th>User</th><th>Balance</th></tr></thead><tbody>
+    ${ec.map((u,i) => `<tr><td class="fw-bold text-muted">#${i+1}</td><td>${u.userName||u.user_id}</td><td>$${(u.balance||0).toLocaleString()}</td></tr>`).join('')}
+    </tbody></table></div>`}
+  </div></div>`;
+}
+
+function renderTickets(d) {
+  const tk = d.tickets || [];
+  const open = tk.filter(t => t.status==='open').length;
+  return `<div class="row">
+    <div class="col-md-4"><div class="stat-card"><div class="value">${tk.length}</div><div class="label">Total Tickets</div></div></div>
+    <div class="col-md-4"><div class="stat-card"><div class="value">${open}</div><div class="label">Open</div></div></div>
+    <div class="col-md-4"><div class="stat-card"><div class="value">${tk.length-open}</div><div class="label">Closed</div></div></div>
+  </div>
+  <div class="card"><div class="card-body">
+    <h6><i class="bi bi-ticket-fill"></i> All Tickets</h6><hr>
+    ${tk.length === 0 ? '<p class="text-muted m-0">No tickets yet.</p>' : `
+    <div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>User</th><th>Category</th><th>Status</th><th>Created</th></tr></thead><tbody>
+    ${tk.map(t => `<tr><td>#${t.id}</td><td>${t.userName||t.user_id}</td><td>${t.category||'General'}</td><td><span class="badge ${t.status==='open'?'bg-success':'bg-secondary'}">${t.status}</span></td><td>${(t.created_at||'').slice(0,10)}</td></tr>`).join('')}
+    </tbody></table></div>`}
+  </div></div>`;
+}
+
+function renderSettings(d) {
+  const c = d.config || {};
+  const cn = c._channelNames || {};
+  const rn = c._roleNames || {};
+  const fields = [
+    {k:'logs_channel',l:'Logs Channel',h:cn.logs_channel},{k:'welcome_channel',l:'Welcome Channel',h:cn.welcome_channel},
+    {k:'leave_channel',l:'Leave Channel',h:cn.leave_channel},{k:'welcome_message',l:'Welcome Message'},
+    {k:'leave_message',l:'Leave Message'},
+    {k:'verification_role',l:'Verification Role',h:rn.verification_role},{k:'ticket_category',l:'Ticket Category',h:cn.ticket_category},{k:'auto_role',l:'Auto Role ID'},
+    {k:'auto_mod_enabled',l:'AutoMod',b:1},{k:'leveling_enabled',l:'Leveling',b:1},
+    {k:'welcome_enabled',l:'Welcome',b:1},{k:'leave_enabled',l:'Leave Msgs',b:1},
+    {k:'verification_enabled',l:'Verification',b:1},{k:'captcha_enabled',l:'Captcha',b:1},{k:'ticket_enabled',l:'Tickets',b:1},
+  ];
+  return `<div class="card"><div class="card-body">
+    <h6><i class="bi bi-gear-fill"></i> Configuration</h6>
+    <p class="text-muted small mb-0">Changes save automatically.</p><hr>
+    <div class="row g-3">
+    ${fields.map(f => {
+      const val = c[f.k];
+      if (f.b) {
+        const chk = val == 1 || val === true;
+        return `<div class="col-md-4"><label class="small text-muted d-block mb-1">${f.l}</label>
+          <div class="form-check form-switch"><input class="form-check-input" type="checkbox" ${chk?'checked':''} onchange="setCfg('${f.k}',this.checked?1:0)"></div></div>`;
+      }
+      const hint = f.h ? `<br><small class="text-muted">${f.h}</small>` : '';
+      return `<div class="col-md-4"><label class="small text-muted d-block mb-1">${f.l}</label>
+        <input class="form-control" value="${val||''}" onchange="setCfg('${f.k}',this.value)">${hint}</div>`;
+    }).join('')}
+    </div>
+  </div></div>`;
+}
+
+function renderLogs() {
+  return `<div class="card"><div class="card-body">
+    <h6><i class="bi bi-journal-text"></i> Recent Logs</h6>
+    <p class="text-muted small">Events appear here in real-time (auto-refreshes every 5s).</p><hr>
+    <div id="logList"><p class="text-muted m-0">Loading...</p></div>
+  </div></div>`;
+}
+
+let logsInterval;
+async function refreshLogs() {
+  if (currentPage !== 'logs' || !currentGuild) return;
+  const d = await api(`/guild/${currentGuild}/logs`);
+  if (!d) return;
+  const el = document.getElementById('logList');
+  if (!el) return;
+  if (!d.logs || d.logs.length === 0) { el.innerHTML = '<p class="text-muted m-0">No logs yet. Events appear here as bot activities happen.</p>'; return; }
+  el.innerHTML = d.logs.map(l => `<div class="d-flex justify-content-between align-items-start p-2 mb-1 rounded" style="background:#000;border:1px solid var(--border)">
+    <div><span class="fw-bold" style="color:#fff;font-size:.75rem">${l.type}</span>
+    <span class="text-muted ms-2">${(l.fields||[]).map(f => `${f.name}: ${f.value}`).join(' · ')}</span></div>
+    <small class="text-muted flex-shrink-0" style="font-size:.65rem">${new Date(l.time).toLocaleTimeString()}</small>
+  </div>`).join('');
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && logsInterval) clearInterval(logsInterval);
+  if (!document.hidden && currentGuild) { refreshLogs(); clearInterval(logsInterval); logsInterval = setInterval(refreshLogs, 5000); }
+});
+
+async function setCfg(key, val) {
+  const body = {}; body[key] = val;
+  await api(`/guild/${currentGuild}/config`, {method:'PUT', body:JSON.stringify(body)});
+  toast('Saved: ' + key);
+}
+
+function toast(msg) {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast show align-items-center border-0';
+  t.style.cssText = 'background:#1a1a1a;color:#fff;border:1px solid #333;border-radius:8px';
+  t.innerHTML = `<div class="d-flex"><div class="toast-body">${msg}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.parentElement.remove()"></button></div>`;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+if (TOKEN) { hideLogin(); init(); }
+</script>
+</body></html>
