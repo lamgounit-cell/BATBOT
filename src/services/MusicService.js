@@ -52,18 +52,21 @@ class MusicService {
   }
 
   async invidiousUrl(url) {
-    const instances = ['https://inv.nadeko.net', 'https://yewtu.be', 'https://invidious.jing.rocks'];
+    const instances = [
+      'https://inv.nadeko.net', 'https://yewtu.be', 'https://invidious.jing.rocks',
+      'https://inv.private.coffee', 'https://invidious.slipfox.xyz', 'https://invidious.incogniweb.net',
+    ];
     const id = url.match(/(?:v=|youtu\.be\/)([\w-]{11})/)?.[1];
     if (!id) return null;
     for (const base of instances) {
       try {
-        const res = await fetch(`${base}/api/v1/videos/${id}`, { signal: AbortSignal.timeout(5000) });
+        const res = await fetch(`${base}/api/v1/videos/${id}`);
         if (!res.ok) continue;
         const data = await res.json();
-        const fmt = data.formatStreams?.find(f => f.encoding?.startsWith('opus') || f.type?.includes('webm'));
-        if (fmt?.url) return fmt.url;
-        const afmt = data.adaptiveFormats?.find(f => f.encoding?.startsWith('opus') || f.type?.includes('webm'));
-        if (afmt?.url) return afmt.url;
+        const all = [...(data.adaptiveFormats || []), ...(data.formatStreams || [])];
+        const audio = all.find(f => f.url && (f.encoding?.startsWith('opus') || f.type?.includes('webm') || f.encoding?.startsWith('aac') || f.type?.includes('mp4')));
+        if (audio?.url) return audio.url;
+        if (all.length > 0 && all[0].url) return all[0].url;
       } catch {}
     }
     return null;
@@ -155,15 +158,20 @@ class MusicService {
   }
 
   async invidiousSearch(query) {
-    const instances = ['https://inv.nadeko.net', 'https://yewtu.be', 'https://invidious.jing.rocks'];
+    const instances = [
+      'https://inv.nadeko.net', 'https://yewtu.be', 'https://invidious.jing.rocks',
+      'https://inv.private.coffee', 'https://invidious.slipfox.xyz', 'https://invidious.incogniweb.net',
+      'https://invidious.lidar.uno', 'https://inv.bp.mutahar.rocks',
+    ];
     for (const base of instances) {
       try {
-        const res = await fetch(`${base}/api/v1/search?q=${encodeURIComponent(query)}&type=video`, { signal: AbortSignal.timeout(5000) });
+        const res = await fetch(`${base}/api/v1/search?q=${encodeURIComponent(query)}&type=video&sort=relevance`);
         if (!res.ok) continue;
         const data = await res.json();
-        const v = data[0];
+        const v = Array.isArray(data) ? data[0] : null;
         if (!v) continue;
-        return { title: v.title, url: `https://youtu.be/${v.videoId}`, duration: v.lengthSeconds ? `${Math.floor(v.lengthSeconds / 60)}:${(v.lengthSeconds % 60).toString().padStart(2, '0')}` : '0:00', durationMs: (v.lengthSeconds || 0) * 1000 };
+        const sec = typeof v.lengthSeconds === 'number' ? v.lengthSeconds : parseInt(v.lengthSeconds) || 0;
+        return { title: v.title, url: `https://youtu.be/${v.videoId}`, duration: `${Math.floor(sec / 60)}:${(sec % 60).toString().padStart(2, '0')}`, durationMs: sec * 1000 };
       } catch {}
     }
     return null;
@@ -190,13 +198,17 @@ class MusicService {
   }
 
   async invidiousInfo(id) {
-    const instances = ['https://inv.nadeko.net', 'https://yewtu.be', 'https://invidious.jing.rocks'];
+    const instances = [
+      'https://inv.nadeko.net', 'https://yewtu.be', 'https://invidious.jing.rocks',
+      'https://inv.private.coffee', 'https://invidious.slipfox.xyz',
+    ];
     for (const base of instances) {
       try {
-        const res = await fetch(`${base}/api/v1/videos/${id}`, { signal: AbortSignal.timeout(5000) });
+        const res = await fetch(`${base}/api/v1/videos/${id}`);
         if (!res.ok) continue;
         const data = await res.json();
-        return { title: data.title, url: `https://youtu.be/${id}`, duration: data.lengthSeconds ? `${Math.floor(data.lengthSeconds / 60)}:${(data.lengthSeconds % 60).toString().padStart(2, '0')}` : '0:00', durationMs: (data.lengthSeconds || 0) * 1000 };
+        const sec = typeof data.lengthSeconds === 'number' ? data.lengthSeconds : parseInt(data.lengthSeconds) || 0;
+        return { title: data.title, url: `https://youtu.be/${id}`, duration: `${Math.floor(sec / 60)}:${(sec % 60).toString().padStart(2, '0')}`, durationMs: sec * 1000 };
       } catch {}
     }
     return null;
