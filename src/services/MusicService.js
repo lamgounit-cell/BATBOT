@@ -20,24 +20,53 @@ class MusicService {
     return this.queues.get(guildId);
   }
 
-  ytArgs() {
+  ytArgs(extra = {}) {
     const isWin = process.platform === 'win32';
     const nodePath = isWin ? process.execPath : (process.env.NODE_PATH || process.execPath);
-    const a = {
-      'no-playlist': true,
-      'extractor-args': 'youtube:player_client=android,web',
-    };
+    const a = { 'no-playlist': true, ...extra };
     if (!isWin) a['js-runtimes'] = `node:${nodePath}`;
+    if (process.env.COOKIES) {
+      const cp = path.join(__dirname, '..', '..', 'cookies.txt');
+      try { fs.writeFileSync(cp, process.env.COOKIES); } catch {}
+      if (fs.existsSync(cp)) a.cookies = cp;
+    }
     return a;
   }
 
-  async getAudioUrl(url) {
-    const { stdout } = await ytDlpExec(url, {
-      ...this.ytArgs(),
-      'get-url': true,
-      format: 'bestaudio',
-    }, { timeout: 30000 });
-    return stdout.trim();
+  async ytGetUrl(url) {
+    const clients = [
+      { 'extractor-args': 'youtube:player_client=ios', format: 'bestaudio/best' },
+      { 'extractor-args': 'youtube:player_client=android', format: 'bestaudio/best' },
+      { 'extractor-args': 'youtube:player_client=web', 'add-headers': 'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36', format: 'bestaudio/best' },
+    ];
+    for (const args of clients) {
+      try {
+        const { stdout } = await ytDlpExec(url, { ...this.ytArgs(args), 'get-url': true }, { timeout: 20000 });
+        const u = stdout.trim();
+        if (u) return u;
+      } catch {}
+    }
+    const u = await this.invidiousUrl(url);
+    if (u) return u;
+    throw new Error('Could not extract audio URL from YouTube');
+  }
+
+  async invidiousUrl(url) {
+    const instances = ['https://inv.nadeko.net', 'https://yewtu.be', 'https://invidious.jing.rocks'];
+    const id = url.match(/(?:v=|youtu\.be\/)([\w-]{11})/)?.[1];
+    if (!id) return null;
+    for (const base of instances) {
+      try {
+        const res = await fetch(`${base}/api/v1/videos/${id}`, { signal: AbortSignal.timeout(5000) });
+        if (!res.ok) continue;
+        const data = await res.json();
+        const fmt = data.formatStreams?.find(f => f.encoding?.startsWith('opus') || f.type?.includes('webm'));
+        if (fmt?.url) return fmt.url;
+        const afmt = data.adaptiveFormats?.find(f => f.encoding?.startsWith('opus') || f.type?.includes('webm'));
+        if (afmt?.url) return afmt.url;
+      } catch {}
+    }
+    return null;
   }
 
   getAudioStream(url) {
@@ -104,23 +133,73 @@ class MusicService {
     } catch { return null; }
   }
 
+  async getAudioUrl(url) {
+    return this.ytGetUrl(url);
+  }
+
   async ytSearch(query) {
-    const { stdout } = await ytDlpExec(`ytsearch1:${query}`, {
-      ...this.ytArgs(),
-      'dump-json': true,
-      'flat-playlist': true,
-    }, { timeout: 15000 });
-    const info = JSON.parse(stdout.trim());
-    return { title: info.title, url: `https://youtu.be/${info.id}`, duration: info.duration_string || '0:00', durationMs: (info.duration || 0) * 1000 };
+    const clients = [
+      { 'extractor-args': 'youtube:player_client=ios' },
+      { 'extractor-args': 'youtube:player_client=android' },
+    ];
+    for (const args of clients) {
+      try {
+        const { stdout } = await ytDlpExec(`ytsearch1:${query}`, { ...this.ytArgs(args), 'dump-json': true, 'flat-playlist': true }, { timeout: 15000 });
+        const info = JSON.parse(stdout.trim());
+        return { title: info.title, url: `https://youtu.be/${info.id}`, duration: info.duration_string || '0:00', durationMs: (info.duration || 0) * 1000 };
+      } catch {}
+    }
+    const iv = await this.invidiousSearch(query);
+    if (iv) return iv;
+    throw new Error('Could not find song');
+  }
+
+  async invidiousSearch(query) {
+    const instances = ['https://inv.nadeko.net', 'https://yewtu.be', 'https://invidious.jing.rocks'];
+    for (const base of instances) {
+      try {
+        const res = await fetch(`${base}/api/v1/search?q=${encodeURIComponent(query)}&type=video`, { signal: AbortSignal.timeout(5000) });
+        if (!res.ok) continue;
+        const data = await res.json();
+        const v = data[0];
+        if (!v) continue;
+        return { title: v.title, url: `https://youtu.be/${v.videoId}`, duration: v.lengthSeconds ? `${Math.floor(v.lengthSeconds / 60)}:${(v.lengthSeconds % 60).toString().padStart(2, '0')}` : '0:00', durationMs: (v.lengthSeconds || 0) * 1000 };
+      } catch {}
+    }
+    return null;
   }
 
   async ytInfo(url) {
-    const { stdout } = await ytDlpExec(url, {
-      ...this.ytArgs(),
-      'dump-json': true,
-    }, { timeout: 15000 });
-    const info = JSON.parse(stdout.trim());
-    return { title: info.title, url: `https://youtu.be/${info.id}`, duration: info.duration_string || '0:00', durationMs: (info.duration || 0) * 1000 };
+    const clients = [
+      { 'extractor-args': 'youtube:player_client=ios' },
+      { 'extractor-args': 'youtube:player_client=android' },
+    ];
+    for (const args of clients) {
+      try {
+        const { stdout } = await ytDlpExec(url, { ...this.ytArgs(args), 'dump-json': true }, { timeout: 15000 });
+        const info = JSON.parse(stdout.trim());
+        return { title: info.title, url: `https://youtu.be/${info.id}`, duration: info.duration_string || '0:00', durationMs: (info.duration || 0) * 1000 };
+      } catch {}
+    }
+    const id = url.match(/(?:v=|youtu\.be\/)([\w-]{11})/)?.[1];
+    if (id) {
+      const iv = await this.invidiousInfo(id);
+      if (iv) return iv;
+    }
+    throw new Error('Could not get video info');
+  }
+
+  async invidiousInfo(id) {
+    const instances = ['https://inv.nadeko.net', 'https://yewtu.be', 'https://invidious.jing.rocks'];
+    for (const base of instances) {
+      try {
+        const res = await fetch(`${base}/api/v1/videos/${id}`, { signal: AbortSignal.timeout(5000) });
+        if (!res.ok) continue;
+        const data = await res.json();
+        return { title: data.title, url: `https://youtu.be/${id}`, duration: data.lengthSeconds ? `${Math.floor(data.lengthSeconds / 60)}:${(data.lengthSeconds % 60).toString().padStart(2, '0')}` : '0:00', durationMs: (data.lengthSeconds || 0) * 1000 };
+      } catch {}
+    }
+    return null;
   }
 
   isSpotify(url) {
