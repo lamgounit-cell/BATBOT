@@ -62,7 +62,8 @@ async function start() {
   process.on('uncaughtException', (err) => console.error('[ANTI_CRASH] Uncaught Exception:', err));
   process.on('warning', (warn) => console.warn('[ANTI_CRASH] Warning:', warn));
 
-  client.login(config.token).catch(err => { console.error('[FATAL] Login failed:', err.message); process.exit(1); });
+  console.log(`[LOGIN] Attempting login (token present: ${!!config.token}, prefix: ${config.token?.substring(0, 4)}...)`);
+  client.login(config.token).catch(err => { console.error('[FATAL] Login failed:', err.message, err.name); });
 }
 
 start().catch(err => { console.error('[FATAL] Startup error:', err); process.exit(1); });

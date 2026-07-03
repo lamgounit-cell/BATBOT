@@ -59,7 +59,8 @@ class WelcomeService {
   }
 
   async generateCard(member, type, bgUrl) {
-    const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
+    let createCanvas, loadImage, GlobalFonts;
+    try { ({ createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas')); } catch { return null; }
     if (this.fontPath) GlobalFonts.registerFromPath(this.fontPath, 'Poppins');
     const hasFont = this.fontPath && GlobalFonts.has('Poppins');
     const font = hasFont ? 'Poppins' : 'sans-serif';
