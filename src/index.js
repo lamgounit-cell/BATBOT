@@ -42,7 +42,6 @@ async function start() {
   new (require('./services/LevelingService'))(client);
   new (require('./services/EconomyService'))(client);
   new (require('./services/VerificationService'))(client);
-  new (require('./services/MusicService'))(client);
   new (require('./services/VoiceAFKService'))(client);
   new (require('./services/DashboardService'))(client, app);
 
