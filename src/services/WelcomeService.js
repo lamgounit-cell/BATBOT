@@ -40,7 +40,9 @@ class WelcomeService {
     await this.fontReady;
     try {
       const card = await this.generateCard(member, 'welcome', row.welcome_image);
-      if (card) await channel.send({ files: [{ attachment: card, name: 'welcome.png' }] });
+      const msg = `Welcome ${member.user} to **${member.guild.name}**!`;
+      if (card) await channel.send({ content: msg, files: [{ attachment: card, name: 'welcome.png' }] });
+      else await channel.send(msg);
     } catch {}
   }
 
@@ -62,7 +64,7 @@ class WelcomeService {
     const hasFont = this.fontPath && GlobalFonts.has('Poppins');
     const font = hasFont ? 'Poppins' : 'sans-serif';
 
-    const W = 800, H = 400;
+    const W = 800, H = 420;
     const canvas = createCanvas(W, H);
     const ctx = canvas.getContext('2d');
 
@@ -72,36 +74,41 @@ class WelcomeService {
       this.drawBg(ctx, W, H, type);
     }
 
-    ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 20; ctx.shadowOffsetY = 4;
+    ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 6;
 
-    const avatarSize = 110;
-    const avatarX = 70, avatarY = H / 2 - avatarSize / 2;
+    const cx = W / 2;
+    const avatarSize = 130;
+    const avatarY = 40;
     try {
       const avatar = await loadImage(member.user.displayAvatarURL({ extension: 'png', size: 256 }));
-      ctx.save(); ctx.beginPath(); ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
-      ctx.drawImage(avatar, avatarX, avatarY, avatarSize, avatarSize); ctx.restore();
+      ctx.save(); ctx.beginPath(); ctx.arc(cx, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
+      ctx.drawImage(avatar, cx - avatarSize / 2, avatarY, avatarSize, avatarSize); ctx.restore();
       ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
       ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4; ctx.beginPath();
-      ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2); ctx.stroke();
+      ctx.arc(cx, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2); ctx.stroke();
     } catch {}
 
-    ctx.shadowBlur = 4; ctx.shadowOffsetY = 2; ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur = 6; ctx.shadowOffsetY = 3; ctx.shadowColor = 'rgba(0,0,0,0.6)';
+    ctx.textAlign = 'center';
+
     ctx.fillStyle = type === 'welcome' ? '#43b581' : '#f04747';
-    ctx.font = `bold 22px ${font}`; ctx.textAlign = 'left';
-    ctx.fillText(type === 'welcome' ? 'WELCOME' : 'GOODBYE', avatarX + avatarSize + 30, avatarY + 30);
+    ctx.font = `bold 20px ${font}`;
+    ctx.fillText(type === 'welcome' ? 'WELCOME' : 'GOODBYE', cx, avatarY + avatarSize + 50);
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = `bold 38px ${font}`; ctx.textAlign = 'left';
-    ctx.fillText(member.user.displayName, avatarX + avatarSize + 30, avatarY + 78);
-    ctx.font = `500 18px ${font}`; ctx.fillStyle = '#cccccc';
-    ctx.fillText(`@${member.user.username}`, avatarX + avatarSize + 30, avatarY + 105);
+    ctx.font = `bold 44px ${font}`;
+    ctx.fillText(`@${member.user.username}`, cx, avatarY + avatarSize + 105);
+
+    ctx.fillStyle = '#aaaaaa';
+    ctx.font = `500 18px ${font}`;
+    ctx.fillText(member.guild.name, cx, avatarY + avatarSize + 135);
 
     ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
-    ctx.fillStyle = 'rgba(255,255,255,0.1)';
-    ctx.fillRect(0, H - 50, W, 50);
-    ctx.fillStyle = '#999999';
-    ctx.font = `500 15px ${font}`; ctx.textAlign = 'center';
-    ctx.fillText(`Member #${member.guild.memberCount}  •  ${member.guild.name}`, W / 2, H - 18);
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.fillRect(0, H - 45, W, 45);
+    ctx.fillStyle = '#888888';
+    ctx.font = `500 14px ${font}`;
+    ctx.fillText(`Member #${member.guild.memberCount}`, cx, H - 16);
 
     return canvas.toBuffer('image/png');
   }
