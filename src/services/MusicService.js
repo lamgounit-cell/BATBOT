@@ -5,12 +5,22 @@ const { spawn } = require('child_process');
 const https = require('https');
 const path = require('path');
 
+function findYtDlp() {
+  try {
+    const constants = require('yt-dlp-exec/src/constants');
+    if (require('fs').existsSync(constants.YOUTUBE_DL_PATH)) return constants.YOUTUBE_DL_PATH;
+  } catch {}
+  const local = path.join(__dirname, '..', '..', process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp');
+  if (require('fs').existsSync(local)) return local;
+  return process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp';
+}
+
 class MusicService {
   constructor(client) {
     this.client = client;
     this.queues = new Map();
     this.panelTimers = new Map();
-    this.ytdlp = path.join(__dirname, '..', '..', 'yt-dlp.exe');
+    this.ytdlp = findYtDlp();
     client.music = this;
   }
 
