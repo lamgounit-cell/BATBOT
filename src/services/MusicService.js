@@ -20,10 +20,21 @@ class MusicService {
     return this.queues.get(guildId);
   }
 
+  ytArgs() {
+    const isWin = process.platform === 'win32';
+    const nodePath = isWin ? process.execPath : (process.env.NODE_PATH || process.execPath);
+    const a = {
+      'no-playlist': true,
+      'extractor-args': 'youtube:player_client=android,web',
+    };
+    if (!isWin) a['js-runtimes'] = `node:${nodePath}`;
+    return a;
+  }
+
   async getAudioUrl(url) {
     const { stdout } = await ytDlpExec(url, {
+      ...this.ytArgs(),
       'get-url': true,
-      'no-playlist': true,
       format: 'bestaudio',
     }, { timeout: 30000 });
     return stdout.trim();
@@ -95,8 +106,8 @@ class MusicService {
 
   async ytSearch(query) {
     const { stdout } = await ytDlpExec(`ytsearch1:${query}`, {
+      ...this.ytArgs(),
       'dump-json': true,
-      'no-playlist': true,
       'flat-playlist': true,
     }, { timeout: 15000 });
     const info = JSON.parse(stdout.trim());
@@ -105,8 +116,8 @@ class MusicService {
 
   async ytInfo(url) {
     const { stdout } = await ytDlpExec(url, {
+      ...this.ytArgs(),
       'dump-json': true,
-      'no-playlist': true,
     }, { timeout: 15000 });
     const info = JSON.parse(stdout.trim());
     return { title: info.title, url: `https://youtu.be/${info.id}`, duration: info.duration_string || '0:00', durationMs: (info.duration || 0) * 1000 };
