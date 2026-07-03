@@ -13,7 +13,9 @@ module.exports = {
     .addSubcommand(s => s.setName('automod').setDescription('Toggle automod').addBooleanOption(o => o.setName('enabled').setDescription('Enable/disable').setRequired(true)))
     .addSubcommand(s => s.setName('leveling').setDescription('Toggle leveling').addBooleanOption(o => o.setName('enabled').setDescription('Enable/disable').setRequired(true)))
     .addSubcommand(s => s.setName('auto_role').setDescription('Set auto-role for new members').addRoleOption(o => o.setName('role').setDescription('Role to assign').setRequired(true)))
-    .addSubcommand(s => s.setName('caps').setDescription('Toggle excessive caps filter').addBooleanOption(o => o.setName('enabled').setDescription('Allow caps?').setRequired(true))),
+    .addSubcommand(s => s.setName('caps').setDescription('Toggle excessive caps filter').addBooleanOption(o => o.setName('enabled').setDescription('Allow caps?').setRequired(true)))
+    .addSubcommand(s => s.setName('levelreward_add').setDescription('Add a role reward for reaching a level').addIntegerOption(o => o.setName('level').setDescription('Level').setRequired(true)).addRoleOption(o => o.setName('role').setDescription('Role to assign').setRequired(true)))
+    .addSubcommand(s => s.setName('levelreward_remove').setDescription('Remove a level reward').addIntegerOption(o => o.setName('level').setDescription('Level').setRequired(true))),
 
   async execute(interaction, client) {
     if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator))
@@ -75,6 +77,20 @@ module.exports = {
       client.db.run('INSERT OR REPLACE INTO config (guild_id, key, value) VALUES ($gid, $key, $val)',
         { gid: interaction.guild.id, key: 'excessive_caps', val: en ? 'true' : 'false' });
       return interaction.reply({ embeds: [successEmbed(`Caps filter ${en ? 'ON' : 'OFF'}`)], ephemeral: true });
+    }
+    if (sub === 'levelreward_add') {
+      const level = interaction.options.getInteger('level');
+      const role = interaction.options.getRole('role');
+      if (level < 1) return interaction.reply({ embeds: [errorEmbed('Level must be 1 or higher.')], ephemeral: true });
+      client.db.run('INSERT OR REPLACE INTO level_rewards (guild_id, level, role_id) VALUES ($gid, $lvl, $rid)',
+        { gid: interaction.guild.id, lvl: level, rid: role.id });
+      return interaction.reply({ embeds: [successEmbed(`Level **${level}** → ${role}`)], ephemeral: true });
+    }
+    if (sub === 'levelreward_remove') {
+      const level = interaction.options.getInteger('level');
+      client.db.run('DELETE FROM level_rewards WHERE guild_id = $gid AND level = $lvl',
+        { gid: interaction.guild.id, lvl: level });
+      return interaction.reply({ embeds: [successEmbed(`Removed reward for level **${level}**`)], ephemeral: true });
     }
   },
 };

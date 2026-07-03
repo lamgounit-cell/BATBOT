@@ -29,6 +29,11 @@ class LevelingService {
         'INSERT INTO levels (user_id, guild_id, xp, level) VALUES ($user_id, $guild_id, $xp, $level) ON CONFLICT(user_id, guild_id) DO UPDATE SET xp = $xp2, level = $level2',
         { user_id: member.id, guild_id: member.guild.id, xp: currentXp - needed, level: newLevel, xp2: currentXp - needed, level2: newLevel }
       );
+      const reward = this.client.db.get('SELECT * FROM level_rewards WHERE guild_id = $gid AND level = $lvl', { gid: member.guild.id, lvl: newLevel });
+      if (reward) {
+        const role = member.guild.roles.cache.get(reward.role_id);
+        if (role) try { await member.roles.add(role); } catch {}
+      }
       return { leveledUp: true, oldLevel: currentLevel, newLevel };
     }
 

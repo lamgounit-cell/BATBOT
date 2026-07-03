@@ -97,6 +97,10 @@ class DatabaseManager {
         afk_since TEXT DEFAULT (datetime('now')),
         PRIMARY KEY (user_id, guild_id)
       );
+      CREATE TABLE IF NOT EXISTS level_rewards (
+        guild_id TEXT, level INTEGER, role_id TEXT,
+        PRIMARY KEY (guild_id, level)
+      );
     `);
   }
 

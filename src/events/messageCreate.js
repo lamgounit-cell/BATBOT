@@ -7,7 +7,7 @@ module.exports = {
     const violations = client.security.handleMessage(message);
     if (client.automod) await client.automod.check(message);
 
-    if (client.leveling && violations.length === 0) {
+    if (client.leveling && violations.length === 0 && client.db.get('SELECT leveling_enabled FROM guilds WHERE id = $id', { id: message.guild.id })?.leveling_enabled) {
       const result = await client.leveling.addXp(message.member);
       if (result?.leveledUp) {
         const channel = message.channel;
