@@ -1,26 +1,16 @@
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, VoiceConnectionStatus, NoSubscriberBehavior } = require('@discordjs/voice');
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const play = require('play-dl');
-const { spawn } = require('child_process');
 const https = require('https');
 const path = require('path');
-
-function findYtDlp() {
-  try {
-    const constants = require('yt-dlp-exec/src/constants');
-    if (require('fs').existsSync(constants.YOUTUBE_DL_PATH)) return constants.YOUTUBE_DL_PATH;
-  } catch {}
-  const local = path.join(__dirname, '..', '..', process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp');
-  if (require('fs').existsSync(local)) return local;
-  return process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp';
-}
+const fs = require('fs');
+const ytDlpExec = require('yt-dlp-exec');
 
 class MusicService {
   constructor(client) {
     this.client = client;
     this.queues = new Map();
     this.panelTimers = new Map();
-    this.ytdlp = findYtDlp();
     client.music = this;
   }
 
@@ -31,15 +21,13 @@ class MusicService {
     return this.queues.get(guildId);
   }
 
-  getAudioUrl(url) {
-    return new Promise((resolve, reject) => {
-      const yt = spawn(this.ytdlp, ['-f', 'bestaudio', '--get-url', '--no-playlist', url], { stdio: ['ignore', 'pipe', 'pipe'] });
-      let out = '';
-      yt.stdout.on('data', d => out += d.toString());
-      yt.stderr.on('data', () => {});
-      yt.on('close', code => code === 0 ? resolve(out.trim()) : reject(new Error(`yt-dlp exited with code ${code}`)));
-      yt.on('error', reject);
-    });
+  async getAudioUrl(url) {
+    const { stdout } = await ytDlpExec(url, {
+      'get-url': true,
+      'no-playlist': true,
+      format: 'bestaudio',
+    }, { timeout: 30000 });
+    return stdout.trim();
   }
 
   getAudioStream(url) {
