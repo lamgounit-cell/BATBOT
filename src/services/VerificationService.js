@@ -104,16 +104,16 @@ class VerificationService {
         roleId: config.verification_role,
         autoRoleId: config.auto_role || null,
         selected: new Set(),
-        expiresAt: Date.now() + 60000,
+        expiresAt: Date.now() + 120000,
       });
       setTimeout(() => {
         const state = this.captchaStates.get(msg.id);
         if (state && !state.resolved) {
           state.resolved = true;
+          state.expired = true;
           msg.edit({ components: this.buildCaptchaGrid(captcha.grid, state.selected, true) }).catch(() => {});
-          this.captchaStates.delete(msg.id);
         }
-      }, 60000);
+      }, 120000);
     } catch {}
   }
 
@@ -141,16 +141,16 @@ class VerificationService {
         roleId: row.verification_role,
         autoRoleId: null,
         selected: new Set(),
-        expiresAt: Date.now() + 60000,
+        expiresAt: Date.now() + 120000,
       });
       setTimeout(() => {
         const state = this.captchaStates.get(msg.id);
         if (state && !state.resolved) {
           state.resolved = true;
+          state.expired = true;
           interaction.editReply({ components: this.buildCaptchaGrid(captcha.grid, state.selected, true) }).catch(() => {});
-          this.captchaStates.delete(msg.id);
         }
-      }, 60000);
+      }, 120000);
       return;
     }
     await interaction.member.roles.add(role);
@@ -160,15 +160,22 @@ class VerificationService {
   async handleCaptchaButton(interaction) {
     const msgId = interaction.message.id;
     const state = this.captchaStates.get(msgId);
-    if (!state || state.resolved) {
-      return interaction.reply({ content: 'This captcha has expired. Click **Verify** again.', ephemeral: true });
+    if (!state) {
+      console.log(`[CAPTCHA] No state for msg ${msgId} (user ${interaction.user.tag})`);
+      return interaction.reply({ content: 'This captcha session was lost (bot restart). Click **Verify** to start a new one.', ephemeral: true });
+    }
+    if (state.resolved && state.expired) {
+      return interaction.reply({ content: 'Time expired. Click **Verify** to try again.', ephemeral: true });
+    }
+    if (state.resolved) {
+      return interaction.reply({ content: 'Already verified!', ephemeral: true });
     }
     if (state.userId !== interaction.user.id) {
       return interaction.reply({ content: 'This captcha is not for you.', ephemeral: true });
     }
     if (Date.now() > state.expiresAt) {
       state.resolved = true;
-      this.captchaStates.delete(msgId);
+      state.expired = true;
       await interaction.update({ components: this.buildCaptchaGrid(state.grid, state.selected, true) });
       return interaction.followUp({ content: '⏰ Time expired. Click **Verify** to try again.', ephemeral: true });
     }
@@ -180,6 +187,7 @@ class VerificationService {
         state.answer.every(i => state.selected.has(i));
       if (correct) {
         state.resolved = true;
+        console.log(`[CAPTCHA] User ${interaction.user.tag} passed captcha in guild ${state.guildId}`);
         const guild = this.client.guilds.cache.get(state.guildId);
         if (guild) {
           const member = await guild.members.fetch(state.userId).catch(() => null);
