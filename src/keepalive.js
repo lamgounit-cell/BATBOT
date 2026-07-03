@@ -6,11 +6,9 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.get('/health', (req, res) => res.json({ status: 'alive', bot: 'BATBOT' }));
+let diagnostics = { ffmpeg: 'checking...', ytdlp: 'checking...' };
 
-let diagnostics = {};
-
-app.get('/diagnostics', (req, res) => res.json(diagnostics));
+app.get('/health', (req, res) => res.json({ status: 'alive', bot: 'BATBOT', ...diagnostics }));
 
 function downloadFile(url, dest) {
   return new Promise((resolve, reject) => {
