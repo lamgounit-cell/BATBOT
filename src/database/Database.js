@@ -107,6 +107,7 @@ class DatabaseManager {
   migrate() {
     const migrations = [
       'ALTER TABLE guilds ADD COLUMN auto_role TEXT',
+      'ALTER TABLE guilds ADD COLUMN welcome_image TEXT',
     ];
     for (const sql of migrations) {
       try { this.db.run(sql); } catch {}

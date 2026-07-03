@@ -14,6 +14,7 @@ module.exports = {
     .addSubcommand(s => s.setName('leveling').setDescription('Toggle leveling').addBooleanOption(o => o.setName('enabled').setDescription('Enable/disable').setRequired(true)))
     .addSubcommand(s => s.setName('auto_role').setDescription('Set auto-role for new members').addRoleOption(o => o.setName('role').setDescription('Role to assign').setRequired(true)))
     .addSubcommand(s => s.setName('caps').setDescription('Toggle excessive caps filter').addBooleanOption(o => o.setName('enabled').setDescription('Allow caps?').setRequired(true)))
+    .addSubcommand(s => s.setName('welcome_image').setDescription('Set welcome card background image URL').addStringOption(o => o.setName('url').setDescription('Image URL (leave empty to remove)').setRequired(false)))
     .addSubcommand(s => s.setName('levelreward_add').setDescription('Add a role reward for reaching a level').addIntegerOption(o => o.setName('level').setDescription('Level').setRequired(true)).addRoleOption(o => o.setName('role').setDescription('Role to assign').setRequired(true)))
     .addSubcommand(s => s.setName('levelreward_remove').setDescription('Remove a level reward').addIntegerOption(o => o.setName('level').setDescription('Level').setRequired(true))),
 
@@ -77,6 +78,12 @@ module.exports = {
       client.db.run('INSERT OR REPLACE INTO config (guild_id, key, value) VALUES ($gid, $key, $val)',
         { gid: interaction.guild.id, key: 'excessive_caps', val: en ? 'true' : 'false' });
       return interaction.reply({ embeds: [successEmbed(`Caps filter ${en ? 'ON' : 'OFF'}`)], ephemeral: true });
+    }
+    if (sub === 'welcome_image') {
+      const url = interaction.options.getString('url');
+      client.db.run('INSERT INTO guilds (id) VALUES ($id) ON CONFLICT(id) DO UPDATE SET welcome_image = $url',
+        { id: interaction.guild.id, url: url || null });
+      return interaction.reply({ embeds: [successEmbed(url ? `Welcome background set` : `Welcome background removed`)], ephemeral: true });
     }
     if (sub === 'levelreward_add') {
       const level = interaction.options.getInteger('level');
