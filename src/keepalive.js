@@ -8,62 +8,74 @@ const PORT = process.env.PORT || 3000;
 
 app.get('/health', (req, res) => res.json({ status: 'alive', bot: 'BATBOT' }));
 
-app.get('/diagnostics', (req, res) => {
-  const checks = {};
-  try {
-    const ff = require('ffmpeg-static');
-    checks.ffmpeg = { path: ff, exists: fs.existsSync(ff) };
-  } catch (e) { checks.ffmpeg = { error: e.message }; }
-  try {
-    const c = require('yt-dlp-exec/src/constants');
-    checks.ytdlp = { path: c.YOUTUBE_DL_PATH, exists: fs.existsSync(c.YOUTUBE_DL_PATH) };
-  } catch (e) { checks.ytdlp = { error: e.message }; }
-  res.json(checks);
-});
+let diagnostics = {};
+
+app.get('/diagnostics', (req, res) => res.json(diagnostics));
 
 function downloadFile(url, dest) {
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(dest);
     https.get(url, res => {
-      if (res.statusCode >= 300 && res.location) return downloadFile(res.location, dest).then(resolve, reject);
-      if (res.statusCode !== 200) { reject(new Error(`HTTP ${res.statusCode}`)); return; }
+      if (res.statusCode >= 300 && res.headers.location) {
+        file.close();
+        fs.unlinkSync(dest);
+        return downloadFile(res.headers.location, dest).then(resolve, reject);
+      }
+      if (res.statusCode !== 200) { file.close(); fs.unlinkSync(dest); reject(new Error(`HTTP ${res.statusCode}`)); return; }
       res.pipe(file);
       file.on('finish', () => { file.close(); resolve(); });
-    }).on('error', reject);
+    }).on('error', err => { file.close(); try { fs.unlinkSync(dest); } catch {} reject(err); });
   });
 }
 
 async function ensureBinaries() {
+  const checks = {};
   try {
     const ff = require('ffmpeg-static');
-    console.log(`[DIAG] ffmpeg: ${ff} (exists: ${fs.existsSync(ff)})`);
-  } catch (e) { console.log('[DIAG] ffmpeg: NOT FOUND', e.message); }
+    const exists = fs.existsSync(ff);
+    checks.ffmpeg = { path: ff, exists };
+    console.log(`[DIAG] ffmpeg: ${ff} (exists: ${exists})`);
+  } catch (e) { checks.ffmpeg = { error: e.message }; console.log('[DIAG] ffmpeg: NOT FOUND'); }
 
-  const ytBin = path.join(__dirname, '..', 'node_modules', 'yt-dlp-exec', 'bin',
-    process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp');
-  const localYt = path.join(__dirname, '..', process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp');
+  const isWin = process.platform === 'win32';
+  const ytName = isWin ? 'yt-dlp.exe' : 'yt-dlp';
+  const ytDlpBin = path.join(__dirname, '..', 'node_modules', 'yt-dlp-exec', 'bin', ytName);
+  const localYt = path.join(__dirname, '..', ytName);
 
-  for (const ytPath of [ytBin, localYt]) {
-    if (fs.existsSync(ytPath)) { console.log(`[DIAG] yt-dlp: ${ytPath} (exists: true)`); return; }
+  let found = false;
+  for (const ytPath of [ytDlpBin, localYt]) {
+    if (fs.existsSync(ytPath)) {
+      checks.ytdlp = { path: ytPath, exists: true };
+      console.log(`[DIAG] yt-dlp: ${ytPath} (exists: true)`);
+      found = true;
+      break;
+    }
   }
 
-  console.log('[DIAG] yt-dlp not found, downloading...');
-  try {
-    const isWin = process.platform === 'win32';
-    const url = `https://github.com/yt-dlp/yt-dlp/releases/latest/download/${isWin ? 'yt-dlp.exe' : 'yt-dlp'}`;
-    const dest = path.join(__dirname, '..', `yt-dlp${isWin ? '.exe' : ''}`);
-    await downloadFile(url, dest);
-    fs.chmodSync(dest, 0o755);
-    console.log(`[DIAG] yt-dlp downloaded to ${dest}`);
-    if (fs.existsSync(ytBin)) fs.copyFileSync(dest, ytBin);
-  } catch (e) {
-    console.log('[DIAG] yt-dlp download failed:', e.message);
+  if (!found) {
+    console.log('[DIAG] yt-dlp not found, downloading...');
+    try {
+      const url = `https://github.com/yt-dlp/yt-dlp/releases/latest/download/${ytName}`;
+      await downloadFile(url, localYt);
+      fs.chmodSync(localYt, 0o755);
+      console.log(`[DIAG] yt-dlp downloaded to ${localYt}`);
+      checks.ytdlp = { path: localYt, exists: true };
+      if (fs.existsSync(ytDlpBin)) {
+        try { fs.copyFileSync(localYt, ytDlpBin); } catch {}
+      }
+    } catch (e) {
+      checks.ytdlp = { error: e.message };
+      console.log('[DIAG] yt-dlp download failed:', e.message);
+    }
   }
+
+  diagnostics = checks;
 }
 
 function startKeepAlive() {
-  ensureBinaries().then(() => {
-    app.listen(PORT, () => console.log(`[KEEPALIVE] Web server running on port ${PORT}`));
+  app.listen(PORT, () => {
+    console.log(`[KEEPALIVE] Web server running on port ${PORT}`);
+    ensureBinaries();
   });
 }
 
