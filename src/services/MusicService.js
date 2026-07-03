@@ -1,6 +1,5 @@
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, VoiceConnectionStatus, NoSubscriberBehavior } = require('@discordjs/voice');
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const play = require('play-dl');
 const https = require('https');
 const path = require('path');
 const fs = require('fs');
@@ -94,25 +93,43 @@ class MusicService {
     } catch { return null; }
   }
 
+  async ytSearch(query) {
+    const { stdout } = await ytDlpExec(`ytsearch1:${query}`, {
+      'dump-json': true,
+      'no-playlist': true,
+      'flat-playlist': true,
+    }, { timeout: 15000 });
+    const info = JSON.parse(stdout.trim());
+    return { title: info.title, url: `https://youtu.be/${info.id}`, duration: info.duration_string || '0:00', durationMs: (info.duration || 0) * 1000 };
+  }
+
+  async ytInfo(url) {
+    const { stdout } = await ytDlpExec(url, {
+      'dump-json': true,
+      'no-playlist': true,
+    }, { timeout: 15000 });
+    const info = JSON.parse(stdout.trim());
+    return { title: info.title, url: `https://youtu.be/${info.id}`, duration: info.duration_string || '0:00', durationMs: (info.duration || 0) * 1000 };
+  }
+
+  isSpotify(url) {
+    return /^https?:\/\/(open\.spotify\.com|spotify\.link)\//i.test(url);
+  }
+
   async addSong(guildId, query, member) {
-    const type = play.yt_validate(query);
-    if (type === 'search') {
-      const results = await play.search(query, { limit: 1 });
-      if (!results.length) return null;
-      return { title: results[0].title, url: results[0].url, duration: results[0].durationRaw, durationMs: results[0].durationInSec * 1000, requester: member.user.tag };
-    }
-    if (type === 'video') {
-      const info = await play.video_basic_info(query);
-      return { title: info.video_details.title, url: info.video_details.url, duration: info.video_details.durationRaw, durationMs: info.video_details.durationInSec * 1000, requester: member.user.tag };
-    }
-    if (play.sp_validate(query) === 'track') {
-      const sp = await this.spotifyTrack(query);
+    const q = query.trim();
+    if (this.isSpotify(q)) {
+      const sp = await this.spotifyTrack(q);
       if (!sp) return null;
-      const searchResults = await play.search(`${sp.name} ${sp.artist}`, { limit: 1 });
-      if (!searchResults.length) return null;
-      return { title: `${sp.name} - ${sp.artist}`, url: searchResults[0].url, duration: searchResults[0].durationRaw, durationMs: searchResults[0].durationInSec * 1000, requester: member.user.tag };
+      const info = await this.ytSearch(`${sp.name} ${sp.artist}`);
+      return { ...info, requester: member.user.tag };
     }
-    return null;
+    if (/^https?:\/\//i.test(q)) {
+      const info = await this.ytInfo(q);
+      return { ...info, requester: member.user.tag };
+    }
+    const info = await this.ytSearch(q);
+    return { ...info, requester: member.user.tag };
   }
 
   async join(member) {
