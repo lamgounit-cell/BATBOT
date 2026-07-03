@@ -91,7 +91,7 @@ class WelcomeService {
     ctx.shadowBlur = 6; ctx.shadowOffsetY = 3; ctx.shadowColor = 'rgba(0,0,0,0.6)';
     ctx.textAlign = 'center';
 
-    ctx.fillStyle = type === 'welcome' ? '#43b581' : '#f04747';
+    ctx.fillStyle = type === 'welcome' ? '#ff8c00' : '#f04747';
     ctx.font = `bold 20px ${font}`;
     ctx.fillText(type === 'welcome' ? 'WELCOME' : 'GOODBYE', cx, avatarY + avatarSize + 50);
 
@@ -121,7 +121,7 @@ class WelcomeService {
       g.addColorStop(0, '#1a0a0a'); g.addColorStop(0.5, '#2e1010'); g.addColorStop(1, '#1a0a0a');
     }
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-    ctx.strokeStyle = type === 'welcome' ? '#43b581' : '#f04747';
+    ctx.strokeStyle = type === 'welcome' ? '#ff8c00' : '#f04747';
     ctx.lineWidth = 3; ctx.strokeRect(15, 15, W - 30, H - 30);
   }
 }
