@@ -45,6 +45,11 @@ async function start() {
   new (require('./services/VoiceAFKService'))(client);
   new (require('./services/DashboardService'))(client, app);
 
+  if (config.geminiKey) {
+    new (require('./ai/GeminiService'))(client);
+    new (require('./ai/MemoryService'))(client);
+  }
+
   setInterval(() => {
     const now = new Date();
     const rows = client.db.all('SELECT * FROM birthdays WHERE month = $m AND day = $d', { m: now.getMonth() + 1, d: now.getDate() });

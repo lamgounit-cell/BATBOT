@@ -15,9 +15,9 @@ module.exports = {
 
     const result = client.security.handleJoin(member);
 
-    if (result.raid?.raid && result.count >= 10) {
+    if (result.raid?.raid && result.raid.count >= 10) {
       try {
-        await member.kick(`[ANTI_RAID] Mass join detected (${result.count} joins)`);
+        await member.kick(`[ANTI_RAID] Mass join detected (${result.raid.count} joins)`);
       } catch {}
     }
 

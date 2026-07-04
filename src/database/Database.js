@@ -101,6 +101,12 @@ class DatabaseManager {
         guild_id TEXT, level INTEGER, role_id TEXT,
         PRIMARY KEY (guild_id, level)
       );
+      CREATE TABLE IF NOT EXISTS ai_memory (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT, role TEXT,
+        content TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      );
     `);
   }
 

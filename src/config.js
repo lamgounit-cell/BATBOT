@@ -12,4 +12,8 @@ module.exports = {
   logLevel: process.env.LOG_LEVEL || 'info',
   developers: process.env.DEVELOPERS?.split(',').map(id => id.trim()) || [],
   owners: process.env.OWNERS?.split(',').map(id => id.trim()) || [],
+  geminiKey: process.env.GEMINI_API_KEY || '',
+  aiModel: process.env.AI_MODEL || 'gemini-1.5-flash',
+  aiMaxHistory: parseInt(process.env.AI_MAX_HISTORY) || 20,
+  aiEnabled: process.env.AI_ENABLED !== 'false',
 };

@@ -1,4 +1,4 @@
-const { PermissionsBitBlock, EmbedBuilder } = require('discord.js');
+const { PermissionsBitField, EmbedBuilder } = require('discord.js');
 
 class AntiRaid {
   constructor(client) {
