@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -17,13 +17,18 @@ module.exports = {
     await interaction.deferReply();
 
     const url = `https://gen.pollinations.ai/image/${encodeURIComponent(fullPrompt)}`;
-    const embed = new EmbedBuilder()
-      .setColor(0x5865F2)
-      .setTitle('🎨 ' + prompt)
-      .setImage(url)
-      .setFooter({ text: `Style: ${style || 'none'} • Powered by Pollinations.ai` })
-      .setTimestamp();
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Image generation failed (${res.status})`);
+      const buffer = Buffer.from(await res.arrayBuffer());
+      const attachment = new AttachmentBuilder(buffer, { name: 'generated.png' });
 
-    await interaction.editReply({ embeds: [embed] });
+      await interaction.editReply({
+        content: `🎨 **${prompt}**${style ? ` (${style})` : ''}`,
+        files: [attachment],
+      });
+    } catch (e) {
+      await interaction.editReply({ content: `Error: ${e.message}` });
+    }
   },
 };
