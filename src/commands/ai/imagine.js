@@ -16,7 +16,7 @@ module.exports = {
 
     await interaction.deferReply();
 
-    const url = `https://gen.pollinations.ai/image/${encodeURIComponent(fullPrompt)}`;
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}`;
     try {
       const res = await fetch(url);
       if (!res.ok) throw new Error(`Image generation failed (${res.status})`);
