@@ -12,8 +12,8 @@ module.exports = {
   logLevel: process.env.LOG_LEVEL || 'info',
   developers: process.env.DEVELOPERS?.split(',').map(id => id.trim()) || [],
   owners: process.env.OWNERS?.split(',').map(id => id.trim()) || [],
-  geminiKey: process.env.GEMINI_API_KEY || '',
-  aiModel: process.env.AI_MODEL || 'gemini-2.0-flash',
+  freeTheAiKey: process.env.FREETHEAI_API_KEY || '',
+  aiModel: process.env.AI_MODEL || 'opc/deepseek-v4-flash-free',
   aiMaxHistory: parseInt(process.env.AI_MAX_HISTORY) || 20,
   aiEnabled: process.env.AI_ENABLED !== 'false',
 };

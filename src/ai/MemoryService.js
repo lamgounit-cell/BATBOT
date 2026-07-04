@@ -42,11 +42,11 @@ class MemoryService {
 
   buildContext(userId, systemPrompt) {
     const history = this.getHistory(userId);
-    const contents = [];
+    const messages = [];
     for (const entry of history) {
-      contents.push({ role: entry.role, parts: [{ text: entry.content }] });
+      messages.push({ role: entry.role, content: entry.content });
     }
-    return { history: contents, system: systemPrompt };
+    return { history: messages, system: systemPrompt };
   }
 }
 

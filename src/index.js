@@ -45,8 +45,8 @@ async function start() {
   new (require('./services/VoiceAFKService'))(client);
   new (require('./services/DashboardService'))(client, app);
 
-  if (config.geminiKey) {
-    new (require('./ai/GeminiService'))(client);
+  if (config.freeTheAiKey) {
+    new (require('./ai/FreeTheAiService'))(client);
     new (require('./ai/MemoryService'))(client);
   }
 
