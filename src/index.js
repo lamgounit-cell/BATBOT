@@ -45,10 +45,8 @@ async function start() {
   new (require('./services/VoiceAFKService'))(client);
   new (require('./services/DashboardService'))(client, app);
 
-  if (config.freeTheAiKey) {
-    new (require('./ai/FreeTheAiService'))(client);
-    new (require('./ai/MemoryService'))(client);
-  }
+  new (require('./ai/PollinationsAiService'))(client);
+  new (require('./ai/MemoryService'))(client);
 
   setInterval(() => {
     const now = new Date();
