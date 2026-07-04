@@ -12,11 +12,17 @@ class GeminiService {
     else console.log(`[AI] Gemini initialized (model: ${this.model})`);
   }
 
+  buildContents(prompt, opts = {}) {
+    const contents = [];
+    if (opts.system) contents.push({ role: 'user', parts: [{ text: `[System] ${opts.system}` }] });
+    if (opts.history) contents.push(...opts.history);
+    contents.push({ role: 'user', parts: [{ text: prompt }] });
+    return contents;
+  }
+
   async generate(prompt, opts = {}) {
     if (!this.enabled) throw new Error('AI is not configured. Set GEMINI_API_KEY.');
-    const contents = opts.history ? [...opts.history, { role: 'user', parts: [{ text: prompt }] }] : [{ role: 'user', parts: [{ text: prompt }] }];
-    const body = { contents, safetySettings: [{ category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }] };
-    if (opts.system) body.systemInstruction = { parts: [{ text: opts.system }] };
+    const body = { contents: this.buildContents(prompt, opts), safetySettings: [{ category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }] };
     const res = await fetch(`${this.baseUrl}/models/${this.model}:generateContent?key=${this.apiKey}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -29,9 +35,7 @@ class GeminiService {
 
   async* generateStream(prompt, opts = {}) {
     if (!this.enabled) throw new Error('AI is not configured. Set GEMINI_API_KEY.');
-    const contents = opts.history ? [...opts.history, { role: 'user', parts: [{ text: prompt }] }] : [{ role: 'user', parts: [{ text: prompt }] }];
-    const body = { contents, safetySettings: [{ category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }] };
-    if (opts.system) body.systemInstruction = { parts: [{ text: opts.system }] };
+    const body = { contents: this.buildContents(prompt, opts), safetySettings: [{ category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }] };
     const res = await fetch(`${this.baseUrl}/models/${this.model}:streamGenerateContent?alt=sse&key=${this.apiKey}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -67,9 +71,9 @@ class GeminiService {
     const buffer = Buffer.from(await blob.arrayBuffer());
     const b64 = buffer.toString('base64');
     const mime = blob.type || 'image/png';
-    const contents = [{ role: 'user', parts: [{ text: prompt }, { inlineData: { mimeType: mime, data: b64 } }] }];
-    const body = { contents, safetySettings: [{ category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }] };
-    if (opts.system) body.systemInstruction = { parts: [{ text: opts.system }] };
+    const parts = [{ text: prompt }, { inlineData: { mimeType: mime, data: b64 } }];
+    if (opts.system) parts.unshift({ text: `[System] ${opts.system}` });
+    const body = { contents: [{ role: 'user', parts }], safetySettings: [{ category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }] };
     const res = await fetch(`${this.baseUrl}/models/${this.model}:generateContent?key=${this.apiKey}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
