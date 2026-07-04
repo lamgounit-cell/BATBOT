@@ -74,14 +74,14 @@ class GeminiService {
     const parts = [{ text: prompt }, { inlineData: { mimeType: mime, data: b64 } }];
     if (opts.system) parts.unshift({ text: `[System] ${opts.system}` });
     const body = { contents: [{ role: 'user', parts }], safetySettings: [{ category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }] };
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`, {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=${this.apiKey}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
     if (!res.ok) {
       let errText;
       try { errText = await res.text(); } catch { errText = '(unable to read)'; }
-      throw new Error(`Gemini vision error: ${res.status} (model: gemini-1.5-flash, api: v1beta) - ${errText}`);
+      throw new Error(`Gemini vision error: ${res.status} (model: gemini-1.5-pro, api: v1) - ${errText}`);
     }
     const data = await res.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
