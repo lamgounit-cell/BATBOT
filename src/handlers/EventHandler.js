@@ -12,7 +12,7 @@ class EventHandler {
 
     for (const file of files) {
       const event = require(join(eventsPath, file));
-      const eventName = file.replace('.js', '');
+      const eventName = event.name || file.replace('.js', '');
 
       if (event.once) {
         this.client.once(eventName, (...args) => event.execute(...args, this.client));
