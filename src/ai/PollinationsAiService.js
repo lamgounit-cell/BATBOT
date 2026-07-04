@@ -9,7 +9,11 @@ class PollinationsAiService {
   async generate(prompt, opts = {}) {
     const messages = [];
     if (opts.system) messages.push({ role: 'system', content: opts.system });
-    if (opts.history) messages.push(...opts.history);
+    if (opts.history) {
+      for (const m of opts.history) {
+        messages.push({ role: m.role === 'model' ? 'assistant' : m.role, content: m.content });
+      }
+    }
     messages.push({ role: 'user', content: prompt });
     const res = await fetch('https://text.pollinations.ai/openai', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },

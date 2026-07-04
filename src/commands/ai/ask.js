@@ -23,7 +23,7 @@ module.exports = {
       const ctx = client.memory.buildContext(interaction.user.id, system);
       const reply = await client.ai.generate(prompt, ctx);
       client.memory.addEntry(interaction.user.id, 'user', prompt);
-      client.memory.addEntry(interaction.user.id, 'model', reply);
+      client.memory.addEntry(interaction.user.id, 'assistant', reply);
 
       const chunks = reply.match(/[\s\S]{1,1900}/g) || [reply];
       for (let i = 0; i < chunks.length; i++) {
