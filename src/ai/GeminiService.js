@@ -3,7 +3,7 @@ const config = require('../config');
 class GeminiService {
   constructor(client) {
     this.client = client;
-    this.baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
+    this.baseUrl = 'https://generativelanguage.googleapis.com/v1';
     this.model = config.aiModel;
     this.apiKey = config.geminiKey;
     this.enabled = !!this.apiKey && config.aiEnabled;
