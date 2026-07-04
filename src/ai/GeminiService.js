@@ -74,13 +74,22 @@ class GeminiService {
     const parts = [{ text: prompt }, { inlineData: { mimeType: mime, data: b64 } }];
     if (opts.system) parts.unshift({ text: `[System] ${opts.system}` });
     const body = { contents: [{ role: 'user', parts }], safetySettings: [{ category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }] };
-    const res = await fetch(`${this.baseUrl}/models/${this.model}:generateContent?key=${this.apiKey}`, {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-    if (!res.ok) { const e = await res.text(); throw new Error(`Gemini API error: ${res.status} ${e}`); }
+    if (!res.ok) {
+      let errText;
+      try { errText = await res.text(); } catch { errText = '(unable to read)'; }
+      throw new Error(`Gemini vision error: ${res.status} (model: gemini-1.5-flash, api: v1beta) - ${errText}`);
+    }
     const data = await res.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (!text) {
+      const finish = data.candidates?.[0]?.finishReason;
+      throw new Error(`Gemini returned no text (finishReason: ${finish || 'unknown'})`);
+    }
+    return text;
   }
 
   async countTokens(text) {
