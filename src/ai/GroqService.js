@@ -98,17 +98,18 @@ function cleanLaTeX(text) {
   return s.trim();
 }
 
-class DeepSeekService {
+class GroqService {
   constructor(client) {
     this.client = client;
-    this.apiKey = client.config.deepseekApiKey;
-    this.enabled = !!(this.apiKey && this.apiKey !== 'your_deepseek_api_key_here');
+    this.apiKey = client.config.groqApiKey;
+    this.enabled = !!(this.apiKey && this.apiKey !== 'your_groq_api_key_here');
+    this.model = 'llama3-70b-8192';
     client.ai = this;
-    console.log(`[AI] DeepSeek initialized (enabled: ${this.enabled})`);
+    console.log(`[AI] Groq initialized (model: ${this.model}, enabled: ${this.enabled})`);
   }
 
   async generate(prompt, opts = {}) {
-    if (!this.enabled) { throw new Error('DeepSeek AI is not configured. Set DEEPSEEK_API_KEY in .env'); }
+    if (!this.enabled) { throw new Error('Groq AI is not configured. Set GROQ_API_KEY in .env'); }
     const messages = [];
     if (opts.system) messages.push({ role: 'system', content: opts.system });
     if (opts.history) {
@@ -117,29 +118,18 @@ class DeepSeekService {
       }
     }
     messages.push({ role: 'user', content: prompt });
-    const res = await fetch('https://api.deepseek.com/chat/completions', {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.apiKey}` },
-      body: JSON.stringify({ model: 'deepseek-chat', messages, max_tokens: 8192 }),
+      body: JSON.stringify({ model: this.model, messages, max_tokens: 8192 }),
     });
-    if (!res.ok) { const e = await res.text().catch(() => ''); throw new Error(`DeepSeek error: ${res.status} ${e}`); }
+    if (!res.ok) { const e = await res.text().catch(() => ''); throw new Error(`Groq error: ${res.status} ${e}`); }
     const data = await res.json();
     const raw = data.choices?.[0]?.message?.content || '';
     return cleanLaTeX(raw);
   }
 
   async generateWithImage(prompt, imageUrl, opts = {}) {
-    if (!this.enabled) { throw new Error('DeepSeek AI is not configured.'); }
-    const messages = [];
-    if (opts.system) messages.push({ role: 'system', content: opts.system });
-    messages.push({ role: 'user', content: [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: imageUrl } }] });
-    const res = await fetch('https://api.deepseek.com/chat/completions', {
-      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.apiKey}` },
-      body: JSON.stringify({ model: 'deepseek-chat', messages, max_tokens: 8192 }),
-    });
-    if (!res.ok) { const e = await res.text().catch(() => ''); throw new Error(`DeepSeek vision error: ${res.status} ${e}`); }
-    const data = await res.json();
-    const raw = data.choices?.[0]?.message?.content || '';
-    return cleanLaTeX(raw);
+    throw new Error('Groq does not support image analysis.');
   }
 
   async countTokens(text) {
@@ -147,4 +137,4 @@ class DeepSeekService {
   }
 }
 
-module.exports = DeepSeekService;
+module.exports = GroqService;

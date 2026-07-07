@@ -45,7 +45,7 @@ async function start() {
   new (require('./services/VoiceAFKService'))(client);
   new (require('./services/DashboardService'))(client, app);
 
-  new (require('./ai/DeepSeekService'))(client);
+  new (require('./ai/GroqService'))(client);
   new (require('./ai/MemoryService'))(client);
 
   setInterval(() => {
