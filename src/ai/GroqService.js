@@ -103,7 +103,7 @@ class GroqService {
     this.client = client;
     this.apiKey = client.config.groqApiKey;
     this.enabled = !!(this.apiKey && this.apiKey !== 'your_groq_api_key_here');
-    this.model = 'llama3-70b-8192';
+    this.model = 'llama-3.3-70b-versatile';
     client.ai = this;
     console.log(`[AI] Groq initialized (model: ${this.model}, enabled: ${this.enabled})`);
   }
