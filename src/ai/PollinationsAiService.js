@@ -68,7 +68,7 @@ function cleanLaTeX(text) {
   s = s.replace(/\\rvert/g, '|');
   s = s.replace(/\\lVert/g, '||');
   s = s.replace(/\\rVert/g, '||');
-  s = s.replace(/\\|/g, '||');
+  s = s.replace(/\\\|/g, '||');
   s = s.replace(/\\left\(/g, '(');
   s = s.replace(/\\right\)/g, ')');
   s = s.replace(/\\left\[/g, '[');
