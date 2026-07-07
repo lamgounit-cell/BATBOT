@@ -12,7 +12,7 @@ module.exports = {
   logLevel: process.env.LOG_LEVEL || 'info',
   developers: process.env.DEVELOPERS?.split(',').map(id => id.trim()) || [],
   owners: process.env.OWNERS?.split(',').map(id => id.trim()) || [],
-  deepseekApiKey: process.env.DEEPSEEK_API_KEY,
   aiEnabled: process.env.AI_ENABLED !== 'false',
   aiMaxHistory: parseInt(process.env.AI_MAX_HISTORY) || 20,
+  deepseekApiKey: process.env.DEEPSEEK_API_KEY,
 };

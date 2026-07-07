@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -10,25 +10,7 @@ module.exports = {
   cooldown: 15,
 
   async execute(interaction) {
-    const prompt = interaction.options.getString('prompt');
-    const style = interaction.options.getString('style');
-    const fullPrompt = style ? `${prompt}, ${style} style` : prompt;
-
     await interaction.deferReply();
-
-    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}`;
-    try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`Image generation failed (${res.status})`);
-      const buffer = Buffer.from(await res.arrayBuffer());
-      const attachment = new AttachmentBuilder(buffer, { name: 'generated.png' });
-
-      await interaction.editReply({
-        content: `🎨 **${prompt}**${style ? ` (${style})` : ''}`,
-        files: [attachment],
-      });
-    } catch (e) {
-      await interaction.editReply({ content: `Error: ${e.message}` });
-    }
-  },
+    await interaction.editReply({ content: 'Image generation is not available with the current AI provider (DeepSeek does not support image generation).' });
+  }
 };
