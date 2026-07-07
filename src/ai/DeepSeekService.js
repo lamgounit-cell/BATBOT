@@ -98,54 +98,47 @@ function cleanLaTeX(text) {
   return s.trim();
 }
 
-class GeminiService {
+class DeepSeekService {
   constructor(client) {
     this.client = client;
-    this.apiKey = client.config.geminiApiKey;
-    this.enabled = !!(this.apiKey && this.apiKey !== 'your_gemini_api_key_here');
-    this.model = 'gemini-2.0-flash';
+    this.apiKey = client.config.deepseekApiKey;
+    this.enabled = !!(this.apiKey && this.apiKey !== 'your_deepseek_api_key_here');
     client.ai = this;
-    console.log(`[AI] Gemini initialized (model: ${this.model}, enabled: ${this.enabled})`);
+    console.log(`[AI] DeepSeek initialized (enabled: ${this.enabled})`);
   }
 
   async generate(prompt, opts = {}) {
-    if (!this.enabled) { throw new Error('Gemini AI is not configured. Set GEMINI_API_KEY in .env'); }
-    const contents = [];
+    if (!this.enabled) { throw new Error('DeepSeek AI is not configured. Set DEEPSEEK_API_KEY in .env'); }
+    const messages = [];
+    if (opts.system) messages.push({ role: 'system', content: opts.system });
     if (opts.history) {
       for (const m of opts.history) {
-        contents.push({ role: m.role === 'assistant' ? 'model' : m.role, parts: [{ text: m.content }] });
+        messages.push({ role: m.role === 'model' ? 'assistant' : m.role, content: m.content });
       }
     }
-    contents.push({ role: 'user', parts: [{ text: prompt }] });
-    const body = { contents };
-    if (opts.system) { body.systemInstruction = { parts: [{ text: opts.system }] }; }
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+    messages.push({ role: 'user', content: prompt });
+    const res = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.apiKey}` },
+      body: JSON.stringify({ model: 'deepseek-chat', messages, max_tokens: 8192 }),
     });
-    if (!res.ok) { const e = await res.text().catch(() => ''); throw new Error(`Gemini error: ${res.status} ${e}`); }
+    if (!res.ok) { const e = await res.text().catch(() => ''); throw new Error(`DeepSeek error: ${res.status} ${e}`); }
     const data = await res.json();
-    const raw = data.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
+    const raw = data.choices?.[0]?.message?.content || '';
     return cleanLaTeX(raw);
   }
 
   async generateWithImage(prompt, imageUrl, opts = {}) {
-    if (!this.enabled) { throw new Error('Gemini AI is not configured. Set GEMINI_API_KEY in .env'); }
-    const imgRes = await fetch(imageUrl);
-    if (!imgRes.ok) { throw new Error(`Failed to fetch image: ${imgRes.status}`); }
-    const buf = Buffer.from(await imgRes.arrayBuffer());
-    const b64 = buf.toString('base64');
-    const mime = imgRes.headers.get('content-type') || 'image/jpeg';
-    const contents = [{ role: 'user', parts: [{ text: prompt }, { inlineData: { mimeType: mime, data: b64 } }] }];
-    const body = { contents };
-    if (opts.system) { body.systemInstruction = { parts: [{ text: opts.system }] }; }
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+    if (!this.enabled) { throw new Error('DeepSeek AI is not configured.'); }
+    const messages = [];
+    if (opts.system) messages.push({ role: 'system', content: opts.system });
+    messages.push({ role: 'user', content: [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: imageUrl } }] });
+    const res = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.apiKey}` },
+      body: JSON.stringify({ model: 'deepseek-chat', messages, max_tokens: 8192 }),
     });
-    if (!res.ok) { const e = await res.text().catch(() => ''); throw new Error(`Gemini vision error: ${res.status} ${e}`); }
+    if (!res.ok) { const e = await res.text().catch(() => ''); throw new Error(`DeepSeek vision error: ${res.status} ${e}`); }
     const data = await res.json();
-    const raw = data.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
+    const raw = data.choices?.[0]?.message?.content || '';
     return cleanLaTeX(raw);
   }
 
@@ -154,4 +147,4 @@ class GeminiService {
   }
 }
 
-module.exports = GeminiService;
+module.exports = DeepSeekService;
