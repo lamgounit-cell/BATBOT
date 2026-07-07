@@ -130,7 +130,7 @@ class PollinationsAiService {
     messages.push({ role: 'user', content: prompt });
     const res = await fetch('https://text.pollinations.ai/openai', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages, model: 'openai' }),
+      body: JSON.stringify({ messages, model: 'openai', max_tokens: 4096 }),
     });
     if (!res.ok) { const e = await res.text().catch(() => ''); throw new Error(`AI error: ${res.status} ${e}`); }
     const data = await res.json();
@@ -144,7 +144,7 @@ class PollinationsAiService {
     messages.push({ role: 'user', content: [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: imageUrl } }] });
     const res = await fetch('https://text.pollinations.ai/openai', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages, model: 'openai' }),
+      body: JSON.stringify({ messages, model: 'openai', max_tokens: 4096 }),
     });
     if (!res.ok) { const e = await res.text().catch(() => ''); throw new Error(`AI vision error: ${res.status} ${e}`); }
     const data = await res.json();

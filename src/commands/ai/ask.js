@@ -28,7 +28,7 @@ module.exports = {
       const chunks = reply.match(/[\s\S]{1,1900}/g) || [reply];
       for (let i = 0; i < chunks.length; i++) {
         if (i === 0) await interaction.editReply(chunks[i]);
-        else await interaction.followUp(chunks[i]);
+        else { try { await interaction.followUp(chunks[i]); } catch {} }
       }
     } catch (e) {
       await interaction.editReply({ embeds: [errorEmbed(e.message)] });
