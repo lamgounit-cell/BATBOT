@@ -2,6 +2,22 @@ module.exports = {
   name: 'messageCreate',
   async execute(message, client) {
     if (message.author.bot || !message.guild) return;
+
+    // @mention AI reply
+    if (message.mentions.has(client.user) && client.ai?.enabled) {
+      const text = message.content.replace(/<@!?\d+>/g, '').trim();
+      if (text) {
+        try {
+          const ctx = client.memory.buildContext(message.author.id, 'You are BATBOT AI, the official assistant of the server. Be helpful and concise. No LaTeX.');
+          const reply = await client.ai.generate(text, ctx);
+          client.memory.addEntry(message.author.id, 'user', text);
+          client.memory.addEntry(message.author.id, 'assistant', reply);
+          await message.reply(reply.slice(0, 1900));
+        } catch {}
+      }
+      return;
+    }
+
     if (!client.security) return;
 
     const violations = client.security.handleMessage(message);
