@@ -6,6 +6,16 @@ class MusicManager {
     this.client = client;
     this.queues = new Map();
     client.music = this;
+
+    if (client.config.spotifyClientId && client.config.spotifyClientSecret) {
+      play.setToken({
+        spotify: {
+          client_id: client.config.spotifyClientId,
+          client_secret: client.config.spotifyClientSecret,
+        },
+      });
+    }
+
     console.log('[MUSIC] Initialized');
   }
 
@@ -72,14 +82,11 @@ class MusicManager {
     let song;
 
     if (play.yt_validate(query) === 'video') {
-      const info = await play.video_info(query);
-      song = {
-        title: info.video_details.title,
-        url: info.video_details.url,
-        duration: info.video_details.durationInSec,
-        thumbnail: info.video_details.thumbnails[0]?.url,
-        requestedBy: interaction.user.id,
-      };
+      song = await this.resolveYoutubeVideo(query);
+    } else if (play.sp_validate(query) === 'track') {
+      song = await this.resolveSpotifyTrack(query);
+    } else if (play.so_validate(query) === 'track') {
+      song = await this.resolveSoundCloudTrack(query);
     } else {
       const results = await play.search(query, { limit: 1 });
       if (!results.length) throw new Error('No results found.');
@@ -88,8 +95,9 @@ class MusicManager {
         title: info.title,
         url: info.url,
         duration: info.durationInSec,
-        thumbnail: info.thumbnails[0]?.url,
+        thumbnail: info.thumbnails?.[0]?.url || null,
         requestedBy: interaction.user.id,
+        source: 'youtube',
       };
     }
 
@@ -97,6 +105,44 @@ class MusicManager {
 
     if (!q.current) return this.startPlayback(interaction.guildId);
     return song;
+  }
+
+  async resolveYoutubeVideo(query) {
+    const info = await play.video_info(query);
+    return {
+      title: info.video_details.title,
+      url: info.video_details.url,
+      duration: info.video_details.durationInSec,
+      thumbnail: info.video_details.thumbnails?.[0]?.url || null,
+      requestedBy: null,
+      source: 'youtube',
+    };
+  }
+
+  async resolveSpotifyTrack(query) {
+    if (!this.client.config.spotifyClientId) throw new Error('Spotify not configured. Set SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET in .env');
+    const data = await play.spotify(query);
+    const artists = data.artists?.map(a => a.name).join(', ') || 'Unknown';
+    return {
+      title: `${artists} - ${data.name}`,
+      url: data.url,
+      duration: data.durationInSec,
+      thumbnail: data.thumbnail?.url || data.thumbnails?.[0]?.url || null,
+      requestedBy: null,
+      source: 'spotify',
+    };
+  }
+
+  async resolveSoundCloudTrack(query) {
+    const data = await play.soundcloud(query);
+    return {
+      title: data.name,
+      url: data.url,
+      duration: data.durationInSec,
+      thumbnail: data.thumbnail?.url || data.thumbnails?.[0]?.url || null,
+      requestedBy: null,
+      source: 'soundcloud',
+    };
   }
 
   async startPlayback(guildId) {
