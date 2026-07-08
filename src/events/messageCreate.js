@@ -1,4 +1,4 @@
-const { EmbedBuilder } = require('discord.js');
+const { capsuleEmbed } = require('../utils/Embed');
 
 module.exports = {
   name: 'messageCreate',
@@ -13,12 +13,7 @@ module.exports = {
           const reply = await client.ai.generate(text, ctx);
           client.memory.addEntry(message.author.id, 'user', text);
           client.memory.addEntry(message.author.id, 'assistant', reply);
-          const embed = new EmbedBuilder()
-            .setColor(client.config.embedColor)
-            .setDescription(reply.length > 4096 ? reply.slice(0, 4093) + '...' : reply)
-            .setTimestamp();
-          if (reply.length > 4096) embed.setFooter({ text: 'Response truncated due to length' });
-          await message.reply({ embeds: [embed] });
+          await message.reply({ embeds: capsuleEmbed(reply) });
         } catch {}
       }
       return;

@@ -42,4 +42,20 @@ function logEmbed(action, options = {}) {
     .setTimestamp();
 }
 
-module.exports = { createEmbed, successEmbed, errorEmbed, warningEmbed, infoEmbed, logEmbed };
+function capsuleEmbed(text) {
+  const MAX = 4096;
+  const embeds = [];
+  let remaining = text;
+  while (remaining.length > 0 && embeds.length < 10) {
+    const chunk = remaining.slice(0, MAX);
+    const embed = new EmbedBuilder().setColor(config.embedColor).setDescription(chunk).setTimestamp();
+    embeds.push(embed);
+    remaining = remaining.slice(MAX);
+  }
+  if (remaining.length > 0) {
+    embeds[embeds.length - 1].setFooter({ text: 'Response truncated due to total length' });
+  }
+  return embeds;
+}
+
+module.exports = { createEmbed, successEmbed, errorEmbed, warningEmbed, infoEmbed, logEmbed, capsuleEmbed };
