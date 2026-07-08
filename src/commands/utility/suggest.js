@@ -18,7 +18,7 @@ module.exports = {
       .setTimestamp();
 
     const msg = await interaction.reply({ embeds: [embed], fetchReply: true });
-    await msg.react('👍');
-    await msg.react('👎');
+    await msg.react('✅');
+    await msg.react('❌');
   },
 };
