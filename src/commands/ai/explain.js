@@ -1,5 +1,19 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { errorEmbed } = require('../../utils/Embed');
+const config = require('../../config');
+
+function capsuleEmbed(description) {
+  const MAX_LEN = 4096;
+  let desc = description;
+  let truncated = false;
+  if (desc.length > MAX_LEN) { desc = desc.slice(0, MAX_LEN - 3) + '...'; truncated = true; }
+  const embed = new EmbedBuilder()
+    .setColor(config.embedColor)
+    .setDescription(desc)
+    .setTimestamp();
+  if (truncated) embed.setFooter({ text: 'Response was truncated due to length' });
+  return embed;
+}
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -15,11 +29,7 @@ module.exports = {
     const style = level === 'simple' ? 'Explain like I am 12 years old.' : level === 'expert' ? 'Explain in technical depth for an expert audience.' : 'Explain clearly and thoroughly.';
     try {
       const reply = await client.ai.generate(`Explain this: ${topic}\n\n${style}`);
-      const chunks = reply.match(/[\s\S]{1,1900}/g) || [reply];
-      for (let i = 0; i < chunks.length; i++) {
-        if (i === 0) await interaction.editReply(chunks[i]);
-        else { try { await interaction.followUp(chunks[i]); } catch {} }
-      }
+      await interaction.editReply({ embeds: [capsuleEmbed(reply)] });
     } catch (e) {
       await interaction.editReply({ embeds: [errorEmbed(e.message)] });
     }
