@@ -6,6 +6,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('ban')
     .setDescription('Ban a member from the server')
+    .setDefaultMemberPermissions(PermissionsBitField.Flags.Administrator)
     .addUserOption(o => o.setName('user').setDescription('Member to ban').setRequired(true))
     .addStringOption(o => o.setName('reason').setDescription('Reason for the ban'))
     .addIntegerOption(o => o.setName('delete_days').setDescription('Delete messages from (days)').setMinValue(0).setMaxValue(7)),

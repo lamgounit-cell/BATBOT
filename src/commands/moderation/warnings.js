@@ -1,10 +1,11 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionsBitField } = require('discord.js');
 const { errorEmbed } = require('../../utils/Embed');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('warnings')
     .setDescription('View warnings for a member')
+    .setDefaultMemberPermissions(PermissionsBitField.Flags.Administrator)
     .addUserOption(o => o.setName('user').setDescription('Member to check').setRequired(true)),
 
   async execute(interaction, client) {

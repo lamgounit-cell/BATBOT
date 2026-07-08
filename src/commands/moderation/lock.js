@@ -5,6 +5,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('lock')
     .setDescription('Lock a channel')
+    .setDefaultMemberPermissions(PermissionsBitField.Flags.Administrator)
     .addChannelOption(o => o.setName('channel').setDescription('Channel to lock').addChannelTypes(ChannelType.GuildText)),
 
   async execute(interaction, client) {

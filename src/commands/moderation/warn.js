@@ -5,6 +5,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('warn')
     .setDescription('Warn a member')
+    .setDefaultMemberPermissions(PermissionsBitField.Flags.Administrator)
     .addUserOption(o => o.setName('user').setDescription('Member to warn').setRequired(true))
     .addStringOption(o => o.setName('reason').setDescription('Reason for the warning').setRequired(true)),
 

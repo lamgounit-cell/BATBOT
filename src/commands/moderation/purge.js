@@ -5,6 +5,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('purge')
     .setDescription('Delete messages in bulk')
+    .setDefaultMemberPermissions(PermissionsBitField.Flags.Administrator)
     .addIntegerOption(o => o.setName('amount').setDescription('Number of messages (1-100)').setRequired(true).setMinValue(1).setMaxValue(100))
     .addUserOption(o => o.setName('user').setDescription('Only delete messages from this user')),
 

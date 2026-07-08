@@ -6,6 +6,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('timeout')
     .setDescription('Timeout a member')
+    .setDefaultMemberPermissions(PermissionsBitField.Flags.Administrator)
     .addUserOption(o => o.setName('user').setDescription('Member to timeout').setRequired(true))
     .addStringOption(o => o.setName('duration').setDescription('Duration (e.g. 10m, 1h, 1d)').setRequired(true))
     .addStringOption(o => o.setName('reason').setDescription('Reason for the timeout')),

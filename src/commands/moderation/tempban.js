@@ -6,6 +6,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('tempban')
     .setDescription('Temporarily ban a member')
+    .setDefaultMemberPermissions(PermissionsBitField.Flags.Administrator)
     .addUserOption(o => o.setName('user').setDescription('Member to tempban').setRequired(true))
     .addStringOption(o => o.setName('duration').setDescription('Duration (e.g. 1h, 1d, 7d)').setRequired(true))
     .addStringOption(o => o.setName('reason').setDescription('Reason')),

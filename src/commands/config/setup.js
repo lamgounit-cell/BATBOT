@@ -5,6 +5,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('setup')
     .setDescription('Configure bot settings')
+    .setDefaultMemberPermissions(PermissionsBitField.Flags.Administrator)
     .addSubcommand(s => s.setName('logs').setDescription('Set log channel').addChannelOption(o => o.setName('channel').setDescription('Channel').setRequired(true)))
     .addSubcommand(s => s.setName('welcome').setDescription('Set welcome channel').addChannelOption(o => o.setName('channel').setDescription('Channel').setRequired(true)).addStringOption(o => o.setName('message').setDescription('Welcome message')))
     .addSubcommand(s => s.setName('leave').setDescription('Set leave channel').addChannelOption(o => o.setName('channel').setDescription('Channel').setRequired(true)).addStringOption(o => o.setName('message').setDescription('Leave message')))

@@ -4,6 +4,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('ticket')
     .setDescription('Send the ticket creation panel')
+    .setDefaultMemberPermissions(PermissionsBitField.Flags.Administrator)
     .addSubcommand(s => s.setName('panel').setDescription('Send the ticket creation panel in this channel')),
 
   async execute(interaction, client) {
