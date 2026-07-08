@@ -48,6 +48,8 @@ async function start() {
   new (require('./ai/GroqService'))(client);
   new (require('./ai/MemoryService'))(client);
 
+  new (require('./music/MusicManager'))(client);
+
   setInterval(() => {
     const now = new Date();
     const rows = client.db.all('SELECT * FROM birthdays WHERE month = $m AND day = $d', { m: now.getMonth() + 1, d: now.getDate() });
