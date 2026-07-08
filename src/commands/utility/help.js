@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionsBitField } = require('discord.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -6,11 +6,17 @@ module.exports = {
     .setDescription('View all available commands'),
 
   async execute(interaction, client) {
+    const isAdmin = interaction.member.permissions.has(PermissionsBitField.Flags.Administrator);
     const categories = {};
+    let count = 0;
+
     for (const [name, cmd] of client.commands) {
+      const perms = cmd.data.default_member_permissions;
+      if (perms && !isAdmin) continue;
       const cat = cmd.category || 'other';
       if (!categories[cat]) categories[cat] = [];
       categories[cat].push(`\`/${name}\` - ${cmd.data.description}`);
+      count++;
     }
 
     const embed = new EmbedBuilder()
@@ -18,7 +24,7 @@ module.exports = {
       .setTitle(`${client.user.username} Commands`)
       .setDescription('A premium security & moderation bot')
       .setThumbnail(client.user.displayAvatarURL())
-      .setFooter({ text: `Total: ${client.commands.size} commands` })
+      .setFooter({ text: `Total: ${count} commands${isAdmin ? ' (admin)' : ''}` })
       .setTimestamp();
 
     for (const [cat, cmds] of Object.entries(categories)) {
