@@ -21,14 +21,13 @@ module.exports = {
 
     const commands = [...client.commands.values()].map(c => c.data.toJSON());
     try {
-      // Register globally AND to the first guild for instant updates
       await client.application.commands.set(commands);
       console.log(`[HANDLER] Registered ${commands.length} global slash commands`);
-      const guild = client.guilds.cache.first();
-      if (guild) {
-        await guild.commands.set(commands);
-        console.log(`[HANDLER] Registered ${commands.length} guild slash commands for ${guild.name}`);
+      // Clear stale guild-level commands to remove duplicates
+      for (const guild of client.guilds.cache.values()) {
+        await guild.commands.set([]);
       }
+      console.log(`[HANDLER] Cleared guild-level commands for ${client.guilds.cache.size} guilds`);
     } catch (err) {
       console.error('[HANDLER] Failed to register commands:', err.message);
     }
