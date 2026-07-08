@@ -1,9 +1,10 @@
+const { EmbedBuilder } = require('discord.js');
+
 module.exports = {
   name: 'messageCreate',
   async execute(message, client) {
     if (message.author.bot || !message.guild) return;
 
-    // @mention AI reply
     if (message.mentions.has(client.user) && client.ai?.enabled) {
       const text = message.content.replace(/<@!?\d+>/g, '').trim();
       if (text) {
@@ -12,7 +13,12 @@ module.exports = {
           const reply = await client.ai.generate(text, ctx);
           client.memory.addEntry(message.author.id, 'user', text);
           client.memory.addEntry(message.author.id, 'assistant', reply);
-          await message.reply(reply.slice(0, 1900));
+          const embed = new EmbedBuilder()
+            .setColor(client.config.embedColor)
+            .setDescription(reply.length > 4096 ? reply.slice(0, 4093) + '...' : reply)
+            .setTimestamp();
+          if (reply.length > 4096) embed.setFooter({ text: 'Response truncated due to length' });
+          await message.reply({ embeds: [embed] });
         } catch {}
       }
       return;
